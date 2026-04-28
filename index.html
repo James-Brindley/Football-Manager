@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FootyManager Pro</title>
+    <title>FootyManager | Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
         <div id="screen-selection" class="screen">
             <div class="header-block">
                 <h1>Footy<span>Manager</span></h1>
-                <p>Choose your club for the 24/25 Season</p>
+                <p>Select your club for the 24/25 campaign</p>
             </div>
             <div id="team-list" class="grid-container scrollable"></div>
         </div>
@@ -77,37 +77,35 @@
                     <ul id="m-events"></ul>
                 </div>
             </div>
-            <button id="btn-finish-match" class="btn-primary hidden" onclick="finalizeWeek()">Full Time Results</button>
+            <button id="btn-to-results" class="btn-primary hidden" onclick="finalizeWeek()">View Full Results</button>
         </div>
 
         <div id="screen-post-match" class="screen hidden">
             <div class="header-block">
-                <h2>Weekly Roundup</h2>
+                <h2 id="post-match-title">Gameweek Results</h2>
             </div>
-            <div class="post-match-layout scrollable">
-                <div class="summary-section">
-                    <h3>GW Results</h3>
-                    <div id="post-results-list" class="fixture-list"></div>
+            <div class="post-match-split">
+                <div class="results-side">
+                    <h3>All Fixtures</h3>
+                    <div id="post-gw-results" class="fixture-list scrollable"></div>
                 </div>
-                <div class="summary-section">
-                    <h3>Standings</h3>
-                    <div class="table-container small-text">
-                        <table id="post-league-table">
-                            <thead><tr><th>#</th><th>Club</th><th>P</th><th>GD</th><th>Pts</th></tr></thead>
+                <div class="table-side">
+                    <h3>Updated Standings</h3>
+                    <div class="table-container scrollable">
+                        <table>
+                            <thead><tr><th>#</th><th>Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr></thead>
                             <tbody id="post-table-body"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
-            <button onclick="returnToHub()" class="btn-primary mt-15">Continue to Hub</button>
+            <button onclick="switchScreen('hub')" class="btn-primary mt-15">Return to Hub</button>
         </div>
 
         <div id="screen-standings" class="screen hidden">
-            <div class="header-block">
-                <h2>League Table</h2>
-            </div>
+            <div class="header-block"><h2>League Table</h2></div>
             <div class="table-container scrollable">
-                <table>
+                <table id="league-table">
                     <thead><tr><th>#</th><th>Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead>
                     <tbody id="table-body"></tbody>
                 </table>
@@ -116,9 +114,7 @@
         </div>
 
         <div id="screen-calendar" class="screen hidden">
-            <div class="header-block">
-                <h2>Fixtures & Results</h2>
-            </div>
+            <div class="header-block"><h2>Fixtures & Results</h2></div>
             <div class="calendar-controls">
                 <button onclick="changeCalendarWeek(-1)" class="btn-icon">◀</button>
                 <h3 id="cal-gw-title">Gameweek 1</h3>
@@ -129,9 +125,7 @@
         </div>
 
         <div id="screen-settings" class="screen hidden">
-            <div class="header-block">
-                <h2>Settings</h2>
-            </div>
+            <div class="header-block"><h2>Settings</h2></div>
             <div class="settings-card">
                 <label>Match Speed: <span id="speed-label" class="badge">1x</span></label>
                 <input type="range" id="speed-slider" min="1" max="20" value="1" class="slider">
