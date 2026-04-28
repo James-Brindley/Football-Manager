@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Football Manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <h1>Football Manager</h1>
+            <h2 id="gameweek-header" class="hidden">Gameweek <span id="gw-number">1</span></h2>
+        </header>
+
+        <div id="screen-selection" class="screen">
+            <h3>Select Your Team</h3>
+            <p>Higher stats (out of 100) mean a stronger team.</p>
+            <div id="team-list" class="grid-list"></div>
+        </div>
+
+        <div id="screen-pre-match" class="screen hidden">
+            <h3>Upcoming Match</h3>
+            <div class="match-card">
+                <h2 id="next-fixture">Team A vs Team B</h2>
+                <button id="btn-start-match" class="primary-btn">Start Match</button>
+            </div>
+        </div>
+
+        <div id="screen-match" class="screen hidden">
+            <div class="scoreboard">
+                <span id="match-home-team">Home</span>
+                <span id="match-score">0 - 0</span>
+                <span id="match-away-team">Away</span>
+            </div>
+            
+            <div class="match-controls">
+                <div class="clock">Min: <span id="match-clock">0</span>'</div>
+                <div class="speed-settings">
+                    <button class="speed-btn active" data-speed="1000">1x</button>
+                    <button class="speed-btn" data-speed="200">5x</button>
+                    <button class="speed-btn" data-speed="50">20x</button>
+                </div>
+            </div>
+
+            <div id="match-event-alert" class="event-alert hidden">Goal!</div>
+            
+            <div class="commentary-box">
+                <h4>Match Events</h4>
+                <ul id="event-log"></ul>
+            </div>
+            
+            <button id="btn-continue-post" class="primary-btn hidden">Continue</button>
+        </div>
+
+        <div id="screen-post-match" class="screen hidden">
+            <div class="post-match-grid">
+                <div class="results-section">
+                    <h3>Gameweek Results</h3>
+                    <ul id="gw-results"></ul>
+                </div>
+                <div class="table-section">
+                    <h3>League Table</h3>
+                    <table id="league-table">
+                        <thead>
+                            <tr>
+                                <th>Pos</th>
+                                <th>Team</th>
+                                <th>P</th>
+                                <th>W</th>
+                                <th>D</th>
+                                <th>L</th>
+                                <th>GD</th>
+                                <th>Pts</th>
+                            </tr>
+                        </thead>
+                        <tbody id="league-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+            <button id="btn-next-week" class="primary-btn">Advance to Next Week</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
