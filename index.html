@@ -72,38 +72,20 @@
                     <div class="score-center" id="m-score">0 - 0</div>
                     <div class="score-team"><span id="m-a-name">Away</span><img id="m-a-logo" src=""></div>
                 </div>
+                
                 <div id="m-alert" class="event-banner hidden">GOAL!</div>
+                
                 <div class="commentary-box scrollable">
                     <ul id="m-events"></ul>
                 </div>
             </div>
-            <button id="btn-to-results" class="btn-primary hidden" onclick="finalizeWeek()">View Full Results</button>
-        </div>
-
-        <div id="screen-post-match" class="screen hidden">
-            <div class="header-block">
-                <h2 id="post-match-title">Gameweek Results</h2>
-            </div>
-            <div class="post-match-split">
-                <div class="results-side">
-                    <h3>All Fixtures</h3>
-                    <div id="post-gw-results" class="fixture-list scrollable"></div>
-                </div>
-                <div class="table-side">
-                    <h3>Updated Standings</h3>
-                    <div class="table-container scrollable">
-                        <table>
-                            <thead><tr><th>#</th><th>Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr></thead>
-                            <tbody id="post-table-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <button onclick="switchScreen('hub')" class="btn-primary mt-15">Return to Hub</button>
+            <button id="btn-finish-match" class="btn-primary hidden" onclick="finalizeWeek()">Continue</button>
         </div>
 
         <div id="screen-standings" class="screen hidden">
-            <div class="header-block"><h2>League Table</h2></div>
+            <div class="header-block">
+                <h2>League Table</h2>
+            </div>
             <div class="table-container scrollable">
                 <table id="league-table">
                     <thead><tr><th>#</th><th>Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead>
@@ -114,7 +96,9 @@
         </div>
 
         <div id="screen-calendar" class="screen hidden">
-            <div class="header-block"><h2>Fixtures & Results</h2></div>
+            <div class="header-block">
+                <h2>Fixtures & Results</h2>
+            </div>
             <div class="calendar-controls">
                 <button onclick="changeCalendarWeek(-1)" class="btn-icon">◀</button>
                 <h3 id="cal-gw-title">Gameweek 1</h3>
@@ -125,7 +109,9 @@
         </div>
 
         <div id="screen-settings" class="screen hidden">
-            <div class="header-block"><h2>Settings</h2></div>
+            <div class="header-block">
+                <h2>Settings</h2>
+            </div>
             <div class="settings-card">
                 <label>Match Speed: <span id="speed-label" class="badge">1x</span></label>
                 <input type="range" id="speed-slider" min="1" max="20" value="1" class="slider">
