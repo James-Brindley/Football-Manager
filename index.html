@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PL Manager 24/25</title>
+    <title>PL Manager 24/25 - Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,7 +14,7 @@
         </header>
 
         <div id="screen-selection" class="screen">
-            <h3>Select Your Club (24/25 Season)</h3>
+            <h3>Select Your Club</h3>
             <div id="team-list" class="grid-list"></div>
         </div>
 
@@ -47,7 +47,7 @@
             </div>
             
             <div class="match-controls">
-                <div class="clock">Min: <span id="match-clock">0</span>'</div>
+                <div class="clock">Min: <span id="match-clock">0</span><span id="extra-time-display"></span>'</div>
                 <div class="speed-settings">
                     <button class="speed-btn active" data-speed="1000">1x</button>
                     <button class="speed-btn" data-speed="200">5x</button>
@@ -61,6 +61,7 @@
                 <ul id="event-log"></ul>
             </div>
             
+            <button id="btn-resume-half" class="primary-btn hidden">Start Second Half</button>
             <button id="btn-continue-post" class="primary-btn hidden">Match Report</button>
         </div>
 
