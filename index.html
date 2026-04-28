@@ -3,85 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PL Manager 24/25 - Pro</title>
+    <title>FootyManager | Dashboard</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="game-container">
-        <header>
-            <h1>Premier League Manager</h1>
-            <h2 id="gameweek-header" class="hidden">Gameweek <span id="gw-number">1</span></h2>
-        </header>
-
         <div id="screen-selection" class="screen">
-            <h3>Select Your Club</h3>
+            <header class="main-header">
+                <h1>Footy<span>Manager</span></h1>
+                <p>Select your club to begin the 24/25 Season</p>
+            </header>
             <div id="team-list" class="grid-list"></div>
         </div>
 
-        <div id="screen-pre-match" class="screen hidden">
-            <div class="match-intro">
-                <div class="intro-team">
-                    <img id="intro-home-logo" src="" alt="">
-                    <h2 id="intro-home-name">Home</h2>
+        <div id="screen-hub" class="screen hidden">
+            <header class="hub-header">
+                <div class="user-profile">
+                    <img id="hub-my-logo" src="" class="nav-logo">
+                    <div>
+                        <h2 id="hub-my-team-name">Team Name</h2>
+                        <span id="hub-gw-status">Gameweek 1</span>
+                    </div>
                 </div>
-                <div class="vs">VS</div>
-                <div class="intro-team">
-                    <img id="intro-away-logo" src="" alt="">
-                    <h2 id="intro-away-name">Away</h2>
+            </header>
+
+            <div class="hub-grid">
+                <div class="hub-card next-match-card">
+                    <h3>Next Match</h3>
+                    <div class="match-preview">
+                        <div class="p-team">
+                            <img id="hub-home-logo" src="">
+                            <span id="hub-home-name">Home</span>
+                        </div>
+                        <div class="p-vs">VS</div>
+                        <div class="p-team">
+                            <img id="hub-away-logo" src="">
+                            <span id="hub-away-name">Away</span>
+                        </div>
+                    </div>
+                    <button id="btn-go-to-prematch" class="primary-btn">Prepare for Match</button>
+                </div>
+
+                <div class="hub-card table-mini-card">
+                    <h3>League View</h3>
+                    <div id="mini-table-container">
+                        </div>
+                    <button id="btn-view-calendar" class="secondary-btn">View Calendar</button>
+                </div>
+
+                <div class="hub-card settings-card">
+                    <h3>Match Settings</h3>
+                    <div class="setting-item">
+                        <label>Sim Speed: <span id="speed-val">1x</span></label>
+                        <input type="range" id="speed-slider" min="1" max="20" value="1" step="1">
+                    </div>
                 </div>
             </div>
-            <button id="btn-start-match" class="primary-btn">Kick Off</button>
+        </div>
+
+        <div id="screen-pre-match" class="screen hidden">
+            <div class="match-intro-card">
+                <div class="intro-flex">
+                    <div class="i-team"><img id="i-h-logo" src=""><h3></h3></div>
+                    <div class="i-vs">VS</div>
+                    <div class="i-team"><img id="i-a-logo" src=""><h3></h3></div>
+                </div>
+                <button id="btn-start-match" class="primary-btn">Kick Off</button>
+                <button onclick="switchScreen('hub')" class="text-btn">Back to Hub</button>
+            </div>
         </div>
 
         <div id="screen-match" class="screen hidden">
-            <div class="scoreboard">
-                <div class="sb-team">
-                    <img id="match-home-logo" src="" class="small-logo">
-                    <span id="match-home-team">Home</span>
+            <div class="match-container">
+                <div class="match-top-bar">
+                    <span id="match-clock">0</span><span id="extra-time-display"></span>'
                 </div>
-                <span id="match-score">0 - 0</span>
-                <div class="sb-team">
-                    <span id="match-away-team">Away</span>
-                    <img id="match-away-logo" src="" class="small-logo">
+                <div class="score-display">
+                    <div class="s-team"><img id="m-h-logo" src=""><span id="m-h-name"></span></div>
+                    <div class="s-score" id="match-score">0 - 0</div>
+                    <div class="s-team"><span id="m-a-name"></span><img id="m-a-logo" src=""></div>
                 </div>
-            </div>
-            
-            <div class="match-controls">
-                <div class="clock">Min: <span id="match-clock">0</span><span id="extra-time-display"></span>'</div>
-                <div class="speed-settings">
-                    <button class="speed-btn active" data-speed="1000">1x</button>
-                    <button class="speed-btn" data-speed="200">5x</button>
-                    <button class="speed-btn" data-speed="20">50x</button>
+                <div id="match-event-alert" class="event-alert hidden">Goal!</div>
+                <div class="commentary-scroll">
+                    <ul id="event-log"></ul>
                 </div>
             </div>
-
-            <div id="match-event-alert" class="event-alert hidden">Goal!</div>
-            
-            <div class="commentary-box">
-                <ul id="event-log"></ul>
-            </div>
-            
-            <button id="btn-resume-half" class="primary-btn hidden">Start Second Half</button>
-            <button id="btn-continue-post" class="primary-btn hidden">Match Report</button>
         </div>
 
         <div id="screen-post-match" class="screen hidden">
-            <div class="post-match-grid">
-                <div class="results-section">
-                    <h3>Results</h3>
+            <div class="post-layout">
+                <div class="results-pane">
+                    <h3>Gameweek Results</h3>
                     <ul id="gw-results"></ul>
                 </div>
-                <div class="table-section">
-                    <h3>League Table</h3>
+                <div class="table-pane">
+                    <h3>Standings</h3>
                     <table id="league-table">
-                        <thead>
-                            <tr><th>Pos</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr>
-                        </thead>
+                        <thead><tr><th>#</th><th>Team</th><th>P</th><th>GD</th><th>Pts</th></tr></thead>
                         <tbody id="league-table-body"></tbody>
                     </table>
                 </div>
             </div>
-            <button id="btn-next-week" class="primary-btn">Next Gameweek</button>
+            <button id="btn-return-hub" class="primary-btn">Return to Hub</button>
+        </div>
+
+        <div id="calendar-overlay" class="overlay hidden">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2>Season Calendar</h2>
+                    <button onclick="closeCalendar()" class="close-btn">&times;</button>
+                </div>
+                <div id="calendar-list"></div>
+            </div>
         </div>
     </div>
     <script src="script.js"></script>
