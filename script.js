@@ -1,4 +1,4 @@
-// --- DATA SET ---
+// --- PREMIER LEAGUE 24/25 DATA ---
 const teamsData = [
     { name: "Man City", att: 94, mid: 92, def: 88, color: "#6CABDD" },
     { name: "Arsenal", att: 90, mid: 91, def: 92, color: "#EF0107" },
@@ -31,240 +31,206 @@ let teams = teamsData.map((t, i) => ({
 let playerTeamId = null;
 let currentWeek = 0;
 let schedule = [];
-let currentWeekResults = [];
-let playerMatchData = null;
 let tickerSpeed = 1000;
 let tickerInterval = null;
-let currentMinute = 0;
-let currentExtraMinute = 0;
 let isSecondHalf = false;
+let currentMinute = 0;
+let extraMin = 0;
+let matchEvents = [];
 
-// --- INITIALIZATION ---
 function init() {
     generateSchedule();
-    renderTeamSelection();
+    renderSelection();
     setupSettings();
 }
 
 function generateSchedule() {
     let ids = teams.map(t => t.id);
-    for (let round = 0; round < 19; round++) {
-        let roundMatches = [];
-        for (let i = 0; i < 10; i++) { roundMatches.push({ home: ids[i], away: ids[19 - i] }); }
-        schedule.push(roundMatches);
+    for (let r = 0; r < 19; r++) {
+        let matches = [];
+        for (let i = 0; i < 10; i++) { matches.push({ h: ids[i], a: ids[19 - i] }); }
+        schedule.push(matches);
         ids.splice(1, 0, ids.pop());
     }
-    let reverse = schedule.map(r => r.map(m => ({ home: m.away, away: m.home })));
-    schedule = schedule.concat(reverse);
+    let rev = schedule.map(r => r.map(m => ({ h: m.a, a: m.h })));
+    schedule = schedule.concat(rev);
 }
 
-function renderTeamSelection() {
-    const list = document.getElementById('team-list');
+// --- NAVIGATION ---
+function switchScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+    document.getElementById(`screen-${id}`).classList.remove('hidden');
+    if(id === 'standings') renderTable();
+}
+
+function renderSelection() {
+    const el = document.getElementById('team-list');
     teams.forEach(t => {
         const div = document.createElement('div');
         div.className = 'team-card';
-        div.innerHTML = `
-            <img src="${t.logo}" style="width:50px; margin-bottom:10px;">
-            <div style="font-weight:800">${t.name}</div>
-            <div class="stat-bar">ATT: ${t.att} MID: ${t.mid} DEF: ${t.def}</div>
-        `;
+        div.innerHTML = `<img src="${t.logo}"><div>${t.name}</div><div class="stat-txt">A:${t.att} M:${t.mid} D:${t.def}</div>`;
         div.onclick = () => { playerTeamId = t.id; updateHub(); switchScreen('hub'); };
-        list.appendChild(div);
+        el.appendChild(div);
     });
 }
 
-function setupSettings() {
-    const slider = document.getElementById('speed-slider');
-    const valLabel = document.getElementById('speed-val');
-    slider.oninput = (e) => {
-        let val = parseInt(e.target.value);
-        valLabel.innerText = val + "x";
-        tickerSpeed = 1000 / val;
-        if (tickerInterval) { clearInterval(tickerInterval); runTicker(); }
-    };
-}
-
-// --- HUB LOGIC ---
 function updateHub() {
-    const pTeam = teams.find(t => t.id === playerTeamId);
-    document.getElementById('hub-my-team-name').innerText = pTeam.name;
-    document.getElementById('hub-my-logo').src = pTeam.logo;
-    document.getElementById('hub-gw-status').innerText = `Gameweek ${currentWeek + 1} of 38`;
-
-    // Next Match
-    const match = schedule[currentWeek].find(m => m.home === playerTeamId || m.away === playerTeamId);
-    const h = teams.find(t => t.id === match.home);
-    const a = teams.find(t => t.id === match.away);
-    document.getElementById('hub-home-name').innerText = h.name;
-    document.getElementById('hub-home-logo').src = h.logo;
-    document.getElementById('hub-away-name').innerText = a.name;
-    document.getElementById('hub-away-logo').src = a.logo;
+    const t = teams.find(x => x.id === playerTeamId);
+    document.getElementById('hub-name').innerText = t.name;
+    document.getElementById('hub-logo').src = t.logo;
+    document.getElementById('hub-gw').innerText = `GW ${currentWeek + 1}/38`;
+    
+    const m = schedule[currentWeek].find(x => x.h === playerTeamId || x.a === playerTeamId);
+    const opp = teams.find(x => x.id === (m.h === playerTeamId ? m.a : m.h));
+    document.getElementById('hub-next-opp').innerText = `vs ${opp.name}`;
 }
 
-// --- MATCH ENGINE ---
-function simulateMatch(hId, aId) {
-    let h = {...teams.find(t => t.id === hId)}, a = {...teams.find(t => t.id === aId)};
-    let events = [], hG = 0, aG = 0, e1 = 0, e2 = 0;
+// --- MATCH LOGIC ---
+function goToPreMatch() {
+    const m = schedule[currentWeek].find(x => x.h === playerTeamId || x.a === playerTeamId);
+    const h = teams.find(x => x.id === m.h), a = teams.find(x => x.id === m.a);
+    document.getElementById('pre-h-logo').src = h.logo;
+    document.getElementById('pre-h-name').innerText = h.name;
+    document.getElementById('pre-a-logo').src = a.logo;
+    document.getElementById('pre-a-name').innerText = a.name;
+    switchScreen('pre-match');
+}
 
-    for (let min = 1; min <= 90; min++) {
-        let hProb = 0.015 * (h.att / a.def) * (h.mid / a.mid) * 1.1;
-        let aProb = 0.015 * (a.att / h.def) * (a.mid / h.mid);
-        let roll = Math.random();
+document.getElementById('btn-start-match').onclick = () => {
+    startMatchSim();
+};
 
-        if (roll < hProb) { 
-            hG++; events.push({ min, type: 'Goal', teamName: h.name, isHome: true }); 
-            if (min <= 45) e1++; else e2++;
-        } else if (roll > 1 - aProb) { 
-            aG++; events.push({ min, type: 'Goal', teamName: a.name, isHome: false }); 
-            if (min <= 45) e1++; else e2++;
-        } else if (Math.random() < 0.02) {
-            let isHome = Math.random() > 0.5;
-            events.push({ min, type: 'Yellow Card', teamName: isHome ? h.name : a.name, isHome });
-            if (min <= 45) e1++; else e2++;
-        }
+function startMatchSim() {
+    const m = schedule[currentWeek].find(x => x.h === playerTeamId || x.a === playerTeamId);
+    const h = teams.find(x => x.id === m.h), a = teams.find(x => x.id === m.a);
+    
+    // UI Reset
+    document.getElementById('m-h-name').innerText = h.name;
+    document.getElementById('m-a-name').innerText = a.name;
+    document.getElementById('m-h-logo').src = h.logo;
+    document.getElementById('m-a-logo').src = a.logo;
+    document.getElementById('m-score').innerText = "0 - 0";
+    document.getElementById('m-events').innerHTML = "";
+    
+    currentMinute = 0; extraMin = 0; isSecondHalf = false;
+    matchEvents = generateMatchEvents(h, a);
+    switchScreen('match');
+    runTicker();
+}
+
+function generateMatchEvents(h, a) {
+    let events = [];
+    for(let i=1; i<=90; i++) {
+        let hProb = 0.015 * (h.att/a.def);
+        let aProb = 0.015 * (a.att/h.def);
+        let r = Math.random();
+        if(r < hProb) events.push({min: i, type: 'GOAL', team: h.name, isHome: true});
+        else if(r > 1 - aProb) events.push({min: i, type: 'GOAL', team: a.name, isHome: false});
+        else if(Math.random() < 0.02) events.push({min: i, type: 'Yellow Card', team: Math.random() > 0.5 ? h.name : a.name});
     }
-    return { hId, aId, hName: h.name, aName: a.name, hG, aG, events, h1Extra: Math.max(1, e1), h2Extra: Math.max(1, e2) };
+    return events;
 }
 
 function runTicker() { tickerInterval = setInterval(tick, tickerSpeed); }
 
 function tick() {
     let limit = isSecondHalf ? 90 : 45;
-    let extraLimit = isSecondHalf ? playerMatchData.h2Extra : playerMatchData.h1Extra;
-
-    if (currentMinute < limit) {
+    if(currentMinute < limit) {
         currentMinute++;
-    } else if (currentExtraMinute < extraLimit) {
-        currentExtraMinute++;
-        document.getElementById('extra-time-display').innerText = `+${currentExtraMinute}`;
+    } else if (extraMin < 3) { // Hardcoded 3 mins extra for now
+        extraMin++;
+        document.getElementById('m-extra').innerText = `+${extraMin}`;
     } else {
         clearInterval(tickerInterval);
-        if (!isSecondHalf) {
-            logEvent("⏸️ HALF TIME. Returning in 3s...");
-            setTimeout(() => {
-                isSecondHalf = true; currentExtraMinute = 0;
-                document.getElementById('extra-time-display').innerText = '';
-                runTicker();
-            }, 3000);
+        if(!isSecondHalf) {
+            setTimeout(() => { 
+                isSecondHalf = true; extraMin = 0; 
+                document.getElementById('m-extra').innerText = "";
+                runTicker(); 
+            }, 2000);
         } else {
-            logEvent("🏁 FULL TIME.");
-            document.getElementById('btn-return-hub').classList.add('hidden'); // Logic to force user to see report
-            finishMatch();
+            finalizeWeek();
         }
         return;
     }
 
-    document.getElementById('match-clock').innerText = currentMinute;
-    let dispMin = currentExtraMinute > 0 ? limit : currentMinute;
-    let evts = playerMatchData.events.filter(e => e.min === dispMin && currentExtraMinute === 0);
-    if (evts.length > 0) handleEvents(evts);
+    document.getElementById('m-clock').innerText = currentMinute;
+    let ev = matchEvents.find(x => x.min === currentMinute && extraMin === 0);
+    if(ev) {
+        clearInterval(tickerInterval);
+        logEvent(`${ev.min}': ${ev.type} - ${ev.team}`);
+        if(ev.type === 'GOAL') updateScore();
+        setTimeout(runTicker, 1500);
+    }
 }
 
-function handleEvents(evts) {
-    clearInterval(tickerInterval);
-    evts.forEach(e => {
-        logEvent(`${e.min}': ${e.type} - ${e.teamName}`);
-        showEventAlert(e.type, e.type === 'Goal' ? '#10b981' : '#fbbf24');
-        updateLiveScore();
+function updateScore() {
+    let hG = matchEvents.filter(x => x.min <= currentMinute && x.type === 'GOAL' && x.isHome).length;
+    let aG = matchEvents.filter(x => x.min <= currentMinute && x.type === 'GOAL' && !x.isHome).length;
+    document.getElementById('m-score').innerText = `${hG} - ${aG}`;
+}
+
+function finalizeWeek() {
+    // Sim all other games
+    schedule[currentWeek].forEach(m => {
+        const h = teams.find(x => x.id === m.h), a = teams.find(x => x.id === m.a);
+        const evs = generateMatchEvents(h, a);
+        const hG = evs.filter(x => x.type === 'GOAL' && x.isHome).length;
+        const aG = evs.filter(x => x.type === 'GOAL' && !x.isHome).length;
+        updateStats(h, a, hG, aG);
     });
-    setTimeout(() => {
-        document.getElementById('match-event-alert').classList.add('hidden');
-        runTicker();
-    }, 1500);
+    currentWeek++;
+    setTimeout(() => { switchScreen('standings'); }, 2000);
 }
 
-function finishMatch() {
-    setTimeout(() => {
-        processWeek();
-        renderPostMatch();
-        switchScreen('postMatch');
-    }, 2000);
+function updateStats(h, a, hG, aG) {
+    h.played++; a.played++; h.gf += hG; h.ga += aG; a.gf += aG; a.ga += hG;
+    h.gd = h.gf - h.ga; a.gd = a.gf - a.ga;
+    if(hG > aG) { h.w++; h.points += 3; a.l++; }
+    else if(aG > hG) { a.w++; a.points += 3; h.l++; }
+    else { h.d++; a.d++; h.points++; a.points++; }
 }
 
-// --- UTILS ---
-function switchScreen(n) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-    document.getElementById(`screen-${n}`).classList.remove('hidden');
-}
-
-function logEvent(t) {
-    const li = document.createElement('li'); li.innerText = t;
-    document.getElementById('event-log').prepend(li);
-}
-
-function showEventAlert(t, c) {
-    const a = document.getElementById('match-event-alert');
-    a.innerText = t; a.style.backgroundColor = c; a.classList.remove('hidden');
-}
-
-function updateLiveScore() {
-    let hG = playerMatchData.events.filter(e => e.min <= currentMinute && e.type === 'Goal' && e.isHome).length;
-    let aG = playerMatchData.events.filter(e => e.min <= currentMinute && e.type === 'Goal' && !e.isHome).length;
-    document.getElementById('match-score').innerText = `${hG} - ${aG}`;
-}
-
-function processWeek() {
-    currentWeekResults.forEach(res => {
-        let h = teams.find(t => t.id === res.hId), a = teams.find(t => t.id === res.aId);
-        h.played++; a.played++; h.gf += res.hG; h.ga += res.aG; a.gf += res.aG; a.ga += res.hG;
-        h.gd = h.gf - h.ga; a.gd = a.gf - a.ga;
-        if (res.hG > res.aG) { h.w++; h.points += 3; a.l++; }
-        else if (res.aG > res.hG) { a.w++; a.points += 3; h.l++; }
-        else { h.d++; a.d++; h.points++; a.points++; }
-    });
-    teams.sort((a, b) => b.points - a.points || b.gd - a.gd || b.gf - a.gf);
-}
-
-function renderPostMatch() {
-    const tbody = document.getElementById('league-table-body');
-    tbody.innerHTML = '';
-    teams.forEach((t, i) => {
-        let tr = document.createElement('tr');
-        if (t.id === playerTeamId) tr.className = 'player-team';
-        tr.innerHTML = `<td>${i+1}</td><td>${t.name}</td><td>${t.played}</td><td>${t.gd}</td><td><strong>${t.points}</strong></td>`;
+// --- SUB PAGES ---
+function renderTable() {
+    const tbody = document.getElementById('table-body');
+    tbody.innerHTML = "";
+    const sorted = [...teams].sort((a,b) => b.points - a.points || b.gd - a.gd);
+    sorted.forEach((t, i) => {
+        const tr = document.createElement('tr');
+        if(t.id === playerTeamId) tr.className = "player-row";
+        tr.innerHTML = `<td>${i+1}</td><td>${t.name}</td><td>${t.played}</td><td>${t.gd}</td><td>${t.points}</td>`;
         tbody.appendChild(tr);
     });
-
-    const resList = document.getElementById('gw-results');
-    resList.innerHTML = '';
-    currentWeekResults.forEach(r => {
-        let li = document.createElement('li');
-        li.innerHTML = `${r.hName} <b>${r.hG} - ${r.aG}</b> ${r.aName}`;
-        resList.appendChild(li);
-    });
 }
 
-// Navigation triggers
-document.getElementById('btn-go-to-prematch').onclick = () => {
-    const match = schedule[currentWeek].find(m => m.home === playerTeamId || m.away === playerTeamId);
-    const h = teams.find(t => t.id === match.home), a = teams.find(t => t.id === match.away);
-    document.getElementById('i-h-logo').src = h.logo;
-    document.getElementById('i-a-logo').src = a.logo;
-    document.querySelector('#screen-pre-match h3').innerText = `${h.name} vs ${a.name}`;
-    switchScreen('preMatch');
-};
+function openCalendar() {
+    const el = document.getElementById('calendar-list');
+    el.innerHTML = "";
+    schedule.forEach((week, i) => {
+        const m = week.find(x => x.h === playerTeamId || x.a === playerTeamId);
+        const h = teams.find(x => x.id === m.h), a = teams.find(x => x.id === m.a);
+        const div = document.createElement('div');
+        div.style.padding = "10px";
+        div.style.borderBottom = "1px solid #334155";
+        div.innerHTML = `<strong>GW ${i+1}</strong>: ${h.name} vs ${a.name}`;
+        el.appendChild(div);
+    });
+    switchScreen('calendar');
+}
 
-document.getElementById('btn-start-match').onclick = () => {
-    currentWeekResults = schedule[currentWeek].map(m => simulateMatch(m.home, m.away));
-    playerMatchData = currentWeekResults.find(m => m.hId === playerTeamId || m.aId === playerTeamId);
-    document.getElementById('m-h-name').innerText = playerMatchData.hName;
-    document.getElementById('m-a-name').innerText = playerMatchData.aName;
-    document.getElementById('m-h-logo').src = teams.find(t => t.name === playerMatchData.hName).logo;
-    document.getElementById('m-a-logo').src = teams.find(t => t.name === playerMatchData.aName).logo;
-    currentMinute = 0; currentExtraMinute = 0; isSecondHalf = false;
-    document.getElementById('event-log').innerHTML = '';
-    switchScreen('match');
-    runTicker();
-};
+function setupSettings() {
+    const slider = document.getElementById('speed-slider');
+    slider.oninput = (e) => {
+        let val = e.target.value;
+        document.getElementById('speed-label').innerText = val + "x";
+        tickerSpeed = 1000 / val;
+    };
+}
 
-document.getElementById('btn-return-hub').onclick = () => {
-    currentWeek++;
-    updateHub();
-    switchScreen('hub');
-};
-
-// Calendar Logic
-document.getElementById('btn-view-calendar').onclick = () => document.getElementById('calendar-overlay').classList.remove('hidden');
-function closeCalendar() { document.getElementById('calendar-overlay').classList.add('hidden'); }
+function logEvent(txt) {
+    const li = document.createElement('li'); li.innerText = txt;
+    document.getElementById('m-events').prepend(li);
+}
 
 init();
