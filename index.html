@@ -3,110 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FootyManager 24/25</title>
+    <title>FootyManager | Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="game-container">
+    <div id="app-container">
         
         <div id="screen-selection" class="screen">
-            <header class="page-header">
+            <div class="header-block">
                 <h1>Footy<span>Manager</span></h1>
-                <p>Choose your club for the 24/25 Season</p>
-            </header>
-            <div id="team-list" class="grid-container"></div>
+                <p>Select your club for the 24/25 campaign</p>
+            </div>
+            <div id="team-list" class="grid-container scrollable"></div>
         </div>
 
         <div id="screen-hub" class="screen hidden">
-            <header class="hub-nav">
-                <div class="team-info">
+            <div class="hub-header">
+                <div class="team-badge">
                     <img id="hub-logo" src="">
-                    <h2 id="hub-name">Team Name</h2>
+                    <div>
+                        <h2 id="hub-name">Team</h2>
+                        <span id="hub-gw" class="badge">GW 1</span>
+                    </div>
                 </div>
-                <div id="hub-gw">Gameweek 1</div>
-            </header>
+            </div>
 
-            <div class="hub-menu">
-                <div class="next-match-preview">
-                    <span>UPCOMING MATCH</span>
-                    <h3 id="hub-next-opp">vs Opponent</h3>
-                </div>
-                
-                <div class="menu-grid">
-                    <button onclick="goToPreMatch()" class="menu-btn primary">KICK OFF</button>
-                    <button onclick="switchScreen('standings')" class="menu-btn">LEAGUE TABLE</button>
-                    <button onclick="openCalendar()" class="menu-btn">CALENDAR</button>
-                    <button onclick="switchScreen('settings')" class="menu-btn">SETTINGS</button>
-                </div>
+            <div class="next-match-card">
+                <p class="label">NEXT FIXTURE</p>
+                <h2 id="hub-next-opp">vs Opponent</h2>
+                <button onclick="goToPreMatch()" class="btn-primary pulse-btn">Match Prep</button>
+            </div>
+            
+            <div class="nav-grid">
+                <button onclick="switchScreen('standings')" class="btn-nav">🏆 Table</button>
+                <button onclick="openCalendar()" class="btn-nav">📅 Calendar</button>
+                <button onclick="switchScreen('settings')" class="btn-nav">⚙️ Settings</button>
             </div>
         </div>
 
         <div id="screen-pre-match" class="screen hidden">
-            <div class="page-card">
-                <h2>Match Preparation</h2>
-                <div class="match-intro">
-                    <div class="intro-side">
-                        <img id="pre-h-logo" src="">
-                        <h3 id="pre-h-name">Home</h3>
-                    </div>
-                    <div class="vs-circle">VS</div>
-                    <div class="intro-side">
-                        <img id="pre-a-logo" src="">
-                        <h3 id="pre-a-name">Away</h3>
-                    </div>
+            <div class="header-block">
+                <h2>Matchday</h2>
+            </div>
+            <div class="matchup-display">
+                <div class="team-side">
+                    <img id="pre-h-logo" src="">
+                    <h3 id="pre-h-name">Home</h3>
                 </div>
-                <button id="btn-start-match" class="primary-btn">Start Game</button>
-                <button onclick="switchScreen('hub')" class="back-btn">Back to Hub</button>
+                <div class="vs-badge">VS</div>
+                <div class="team-side">
+                    <img id="pre-a-logo" src="">
+                    <h3 id="pre-a-name">Away</h3>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button id="btn-start-match" class="btn-primary">Kick Off</button>
+                <button onclick="switchScreen('hub')" class="btn-secondary">Back to Hub</button>
             </div>
         </div>
 
         <div id="screen-match" class="screen hidden">
-            <div class="match-arena">
-                <div class="scoreboard">
-                    <div class="sb-side"><img id="m-h-logo" src=""><span id="m-h-name"></span></div>
-                    <div class="sb-score" id="m-score">0 - 0</div>
-                    <div class="sb-side"><span id="m-a-name"></span><img id="m-a-logo" src=""></div>
-                </div>
-                <div class="match-time">
+            <div id="match-arena" class="arena">
+                <div class="clock-display">
                     <span id="m-clock">0</span><span id="m-extra" class="extra-time"></span>'
                 </div>
-                <div id="m-alert" class="match-alert hidden">GOAL!</div>
-                <div class="ticker-box">
+                <div class="scoreboard">
+                    <div class="score-team"><img id="m-h-logo" src=""><span id="m-h-name">Home</span></div>
+                    <div class="score-center" id="m-score">0 - 0</div>
+                    <div class="score-team"><span id="m-a-name">Away</span><img id="m-a-logo" src=""></div>
+                </div>
+                
+                <div id="m-alert" class="event-banner hidden">GOAL!</div>
+                
+                <div class="commentary-box scrollable">
                     <ul id="m-events"></ul>
                 </div>
             </div>
+            <button id="btn-finish-match" class="btn-primary hidden" onclick="finalizeWeek()">Continue</button>
         </div>
 
         <div id="screen-standings" class="screen hidden">
-            <div class="page-card">
+            <div class="header-block">
                 <h2>League Table</h2>
-                <div class="table-scroll">
-                    <table id="league-table">
-                        <thead><tr><th>#</th><th>Team</th><th>P</th><th>GD</th><th>Pts</th></tr></thead>
-                        <tbody id="table-body"></tbody>
-                    </table>
-                </div>
-                <button onclick="switchScreen('hub')" class="back-btn">Back to Hub</button>
             </div>
+            <div class="table-container scrollable">
+                <table id="league-table">
+                    <thead><tr><th>#</th><th>Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+            </div>
+            <button onclick="switchScreen('hub')" class="btn-secondary mt-15">Back to Hub</button>
         </div>
 
         <div id="screen-calendar" class="screen hidden">
-            <div class="page-card">
-                <h2>Season Fixtures</h2>
-                <div id="calendar-list" class="scroll-list"></div>
-                <button onclick="switchScreen('hub')" class="back-btn">Back to Hub</button>
+            <div class="header-block">
+                <h2>Fixtures & Results</h2>
             </div>
+            <div class="calendar-controls">
+                <button onclick="changeCalendarWeek(-1)" class="btn-icon">◀</button>
+                <h3 id="cal-gw-title">Gameweek 1</h3>
+                <button onclick="changeCalendarWeek(1)" class="btn-icon">▶</button>
+            </div>
+            <div id="calendar-list" class="fixture-list scrollable"></div>
+            <button onclick="switchScreen('hub')" class="btn-secondary mt-15">Back to Hub</button>
         </div>
 
         <div id="screen-settings" class="screen hidden">
-            <div class="page-card">
+            <div class="header-block">
                 <h2>Settings</h2>
-                <div class="setting-row">
-                    <label>Simulation Speed: <span id="speed-label">1x</span></label>
-                    <input type="range" id="speed-slider" min="1" max="20" value="1">
-                </div>
-                <button onclick="switchScreen('hub')" class="back-btn">Back to Hub</button>
             </div>
+            <div class="settings-card">
+                <label>Match Speed: <span id="speed-label" class="badge">1x</span></label>
+                <input type="range" id="speed-slider" min="1" max="20" value="1" class="slider">
+            </div>
+            <button onclick="switchScreen('hub')" class="btn-secondary mt-15">Back to Hub</button>
         </div>
 
     </div>
