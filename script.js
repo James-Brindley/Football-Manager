@@ -19,7 +19,7 @@ const teamsData = [
     { name: "Nott'm Forest", att: 74, mid: 73, def: 74, color: "#DD0000" },
     { name: "Leicester", att: 73, mid: 72, def: 71, color: "#003090" },
     { name: "Ipswich", att: 71, mid: 70, def: 69, color: "#0000FF" },
-    { name: "Southampton", att: 70, mid: 71, def: 70, color: "#D71920" }
+    { name: "Southampton", att: 99, mid: 99, def: 99, color: "#D71920" }
 ];
 
 let teams = teamsData.map((t, i) => ({
@@ -33,9 +33,12 @@ let currentWeek = 0;
 let schedule = [];
 let currentWeekResults = [];
 let playerMatchData = null;
+
 let currentMinute = 0;
+let currentExtraMinute = 0;
 let tickerSpeed = 1000;
 let tickerInterval = null;
+let isSecondHalf = false;
 
 function init() {
     generateSchedule();
@@ -59,73 +62,73 @@ function renderTeamSelection() {
     teams.forEach(t => {
         const div = document.createElement('div');
         div.className = 'team-card';
-        div.innerHTML = `<img src="${t.logo}" style="width:40px; margin-bottom:5px;"><br><strong>${t.name}</strong><br><small>A:${t.att} M:${t.mid} D:${t.def}</small>`;
+        div.innerHTML = `<img src="${t.logo}" style="width:40px; margin-bottom:5px;"><br><strong>${t.name}</strong>`;
         div.onclick = () => { playerTeamId = t.id; switchScreen('preMatch'); setupPreMatch(); };
         list.appendChild(div);
     });
 }
 
-// --- 3. SIMULATION LOGIC ---
+// --- 3. SIMULATION ENGINE ---
 function simulateMatch(hId, aId) {
     let h = {...teams.find(t => t.id === hId)};
     let a = {...teams.find(t => t.id === aId)};
     let events = [];
     let hG = 0, aG = 0;
+    let h1EventsCount = 0, h2EventsCount = 0;
 
     for (let min = 1; min <= 90; min++) {
-        // Dynamic Probabilities (re-calculated every minute based on current stats)
         let hProb = 0.015 * (h.att / a.def) * (h.mid / a.mid) * 1.1;
         let aProb = 0.015 * (a.att / h.def) * (a.mid / h.mid);
-
         let roll = Math.random();
         
-        // 1. Check for Goals
-        if (roll < hProb) { hG++; events.push({ min, type: 'Goal', teamName: h.name, isHome: true }); }
-        else if (roll > 1 - aProb) { aG++; events.push({ min, type: 'Goal', teamName: a.name, isHome: false }); }
-        
-        // 2. Check for Cards
-        else if (Math.random() < 0.018) {
+        let eventThisMin = false;
+
+        if (roll < hProb) { 
+            hG++; events.push({ min, type: 'Goal', teamName: h.name, isHome: true }); 
+            eventThisMin = true;
+        } else if (roll > 1 - aProb) { 
+            aG++; events.push({ min, type: 'Goal', teamName: a.name, isHome: false }); 
+            eventThisMin = true;
+        } else if (Math.random() < 0.018) {
+            eventThisMin = true;
             let isHome = Math.random() > 0.5;
             let target = isHome ? h : a;
-            let isRed = Math.random() < 0.15; // 15% of cards are red
-
+            let isRed = Math.random() < 0.15;
             if (isRed) {
                 target.att -= 12; target.mid -= 12; target.def -= 12;
                 events.push({ min, type: 'Red Card', teamName: target.name, isHome });
-                // Penalty Chance after a Red Card
                 if (Math.random() < 0.4) {
-                    let scoringTeam = isHome ? a : h;
-                    let isHomeScoring = !isHome;
-                    if (isHomeScoring) hG++; else aG++;
-                    events.push({ min, type: 'Penalty Goal', teamName: scoringTeam.name, isHome: isHomeScoring });
+                    if (!isHome) hG++; else aG++;
+                    events.push({ min, type: 'Penalty Goal', teamName: !isHome ? h.name : a.name, isHome: !isHome });
                 }
             } else {
-                // Yellow Card: Reduce one random stat by 2
                 let stats = ['att', 'mid', 'def'];
-                let chosen = stats[Math.floor(Math.random() * 3)];
-                target[chosen] -= 2;
+                target[stats[Math.floor(Math.random()*3)]] -= 2;
                 events.push({ min, type: 'Yellow Card', teamName: target.name, isHome });
-                // Freekick Chance after a Yellow
                 if (Math.random() < 0.1) {
-                    let scoringTeam = isHome ? a : h;
-                    let isHomeScoring = !isHome;
-                    if (isHomeScoring) hG++; else aG++;
-                    events.push({ min, type: 'Freekick Goal', teamName: scoringTeam.name, isHome: isHomeScoring });
+                    if (!isHome) hG++; else aG++;
+                    events.push({ min, type: 'Freekick Goal', teamName: !isHome ? h.name : a.name, isHome: !isHome });
                 }
             }
         }
+
+        if (eventThisMin) {
+            if (min <= 45) h1EventsCount++; else h2EventsCount++;
+        }
     }
-    return { hId, aId, hName: h.name, aName: a.name, hG, aG, events };
+
+    return { 
+        hId, aId, hName: h.name, aName: a.name, hG, aG, events,
+        h1Extra: Math.ceil(h1EventsCount * 0.5) || 1, 
+        h2Extra: Math.ceil(h2EventsCount * 0.5) || 2 
+    };
 }
 
-// --- 4. UI HANDLERS ---
+// --- 4. TICKER LOGIC ---
 function setupPreMatch() {
-    document.getElementById('gameweek-header').classList.remove('hidden');
     document.getElementById('gw-number').innerText = currentWeek + 1;
     const match = schedule[currentWeek].find(m => m.home === playerTeamId || m.away === playerTeamId);
-    const h = teams.find(t => t.id === match.home);
-    const a = teams.find(t => t.id === match.away);
-    
+    const h = teams.find(t => t.id === match.home), a = teams.find(t => t.id === match.away);
     document.getElementById('intro-home-name').innerText = h.name;
     document.getElementById('intro-home-logo').src = h.logo;
     document.getElementById('intro-away-name').innerText = a.name;
@@ -144,7 +147,9 @@ document.getElementById('btn-start-match').onclick = () => {
     document.getElementById('match-score').innerText = "0 - 0";
     document.getElementById('event-log').innerHTML = '';
     document.getElementById('btn-continue-post').classList.add('hidden');
-    currentMinute = 0;
+    document.getElementById('btn-resume-half').classList.add('hidden');
+    
+    currentMinute = 0; currentExtraMinute = 0; isSecondHalf = false;
     switchScreen('match');
     runTicker();
 };
@@ -152,45 +157,69 @@ document.getElementById('btn-start-match').onclick = () => {
 function runTicker() { tickerInterval = setInterval(tick, tickerSpeed); }
 
 function tick() {
-    currentMinute++;
-    document.getElementById('match-clock').innerText = currentMinute;
-    let evts = playerMatchData.events.filter(e => e.min === currentMinute);
+    let limit = isSecondHalf ? 90 : 45;
+    let extraLimit = isSecondHalf ? playerMatchData.h2Extra : playerMatchData.h1Extra;
 
-    if (evts.length > 0) {
+    if (currentMinute < limit) {
+        currentMinute++;
+    } else if (currentExtraMinute < extraLimit) {
+        currentExtraMinute++;
+        document.getElementById('extra-time-display').innerText = ` + ${currentExtraMinute}`;
+    } else {
+        // Half ended
         clearInterval(tickerInterval);
-        evts.forEach(e => {
-            let icon = e.type.includes('Goal') ? '⚽' : (e.type === 'Red Card' ? '🟥' : '🟨');
-            logEvent(`${icon} ${e.min}': ${e.type} - ${e.teamName}`);
-            
-            if (e.type.includes('Goal')) {
-                showEventAlert(`${e.type.toUpperCase()}! ${e.teamName}`, '#10b981');
-                updateScore();
-            } else {
-                showEventAlert(e.type, e.type === 'Red Card' ? '#ef4444' : '#eab308');
-            }
-        });
-        setTimeout(() => {
-            document.getElementById('match-event-alert').classList.add('hidden');
-            if (currentMinute < 90) runTicker(); else finishMatch();
-        }, 1500);
-    } else if (currentMinute >= 90) {
-        clearInterval(tickerInterval);
-        finishMatch();
+        if (!isSecondHalf) {
+            logEvent("⏸️ Half Time.");
+            document.getElementById('btn-resume-half').classList.remove('hidden');
+        } else {
+            logEvent("🏁 Full Time.");
+            document.getElementById('btn-continue-post').classList.remove('hidden');
+        }
+        return;
+    }
+
+    document.getElementById('match-clock').innerText = currentMinute;
+    
+    // Check events
+    let displayMin = currentExtraMinute > 0 ? limit : currentMinute;
+    let evts = playerMatchData.events.filter(e => e.min === displayMin);
+    
+    // Only trigger events once per actual minute (ignore extra minutes for simplified simulation)
+    // We treat events in the 45th and 90th minute as possibly occurring in extra time
+    if (evts.length > 0 && currentExtraMinute === 0) {
+        handleEvents(evts);
     }
 }
 
+function handleEvents(evts) {
+    clearInterval(tickerInterval);
+    evts.forEach(e => {
+        let icon = e.type.includes('Goal') ? '⚽' : (e.type === 'Red Card' ? '🟥' : '🟨');
+        logEvent(`${icon} ${e.min}': ${e.type} - ${e.teamName}`);
+        showEventAlert(`${e.type.toUpperCase()}!`, e.type.includes('Goal') ? '#10b981' : (e.type === 'Red Card' ? '#ef4444' : '#eab308'));
+        updateScore();
+    });
+    setTimeout(() => {
+        document.getElementById('match-event-alert').classList.add('hidden');
+        runTicker();
+    }, 1500);
+}
+
+document.getElementById('btn-resume-half').onclick = () => {
+    isSecondHalf = true;
+    currentExtraMinute = 0;
+    document.getElementById('extra-time-display').innerText = '';
+    document.getElementById('btn-resume-half').classList.add('hidden');
+    runTicker();
+};
+
+// --- 5. UI UTILS ---
 function updateScore() {
     let hG = playerMatchData.events.filter(e => e.min <= currentMinute && e.type.includes('Goal') && e.isHome).length;
     let aG = playerMatchData.events.filter(e => e.min <= currentMinute && e.type.includes('Goal') && !e.isHome).length;
     document.getElementById('match-score').innerText = `${hG} - ${aG}`;
 }
 
-function finishMatch() {
-    logEvent("🏁 90': Full Time.");
-    document.getElementById('btn-continue-post').classList.remove('hidden');
-}
-
-// --- 5. WRAPPING UP ---
 function processWeek() {
     currentWeekResults.forEach(res => {
         let h = teams.find(t => t.id === res.hId), a = teams.find(t => t.id === res.aId);
@@ -209,10 +238,8 @@ function renderPostMatch() {
     currentWeekResults.forEach(r => {
         let li = document.createElement('li');
         li.innerHTML = `<small>${r.hName}</small> <strong>${r.hG} - ${r.aG}</strong> <small>${r.aName}</small>`;
-        if (r.hId === playerTeamId || r.aId === playerTeamId) li.style.color = '#3b82f6';
         resList.appendChild(li);
     });
-
     const tbody = document.getElementById('league-table-body');
     tbody.innerHTML = '';
     teams.forEach((t, i) => {
@@ -223,12 +250,15 @@ function renderPostMatch() {
     });
 }
 
-document.getElementById('btn-continue-post').onclick = () => { processWeek(); renderPostMatch(); switchScreen('postMatch'); };
+document.getElementById('btn-continue-post').onclick = () => { 
+    processWeek(); renderPostMatch(); switchScreen('postMatch'); 
+    document.getElementById('extra-time-display').innerText = '';
+};
 document.getElementById('btn-next-week').onclick = () => { currentWeek++; setupPreMatch(); switchScreen('preMatch'); };
 
 function logEvent(txt) { 
     const li = document.createElement('li'); li.innerText = txt; 
-    const log = document.getElementById('event-log'); log.prepend(li); 
+    document.getElementById('event-log').prepend(li); 
 }
 function showEventAlert(txt, col) { 
     const a = document.getElementById('match-event-alert'); 
