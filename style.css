@@ -1,0 +1,109 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #1e293b;
+    color: #f8fafc;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+#game-container {
+    background-color: #0f172a;
+    width: 100%;
+    max-width: 900px;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+header {
+    text-align: center;
+    border-bottom: 2px solid #334155;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.hidden { display: none !important; }
+.screen { animation: fadeIn 0.3s ease-in; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Buttons */
+button {
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+.primary-btn {
+    background-color: #3b82f6;
+    color: white;
+    width: 100%;
+    font-size: 1.1rem;
+    margin-top: 15px;
+}
+.primary-btn:hover { background-color: #2563eb; }
+
+/* Grid for Team Selection */
+.grid-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+.team-card {
+    background-color: #1e293b;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    cursor: pointer;
+    text-align: center;
+}
+.team-card:hover { border-color: #3b82f6; background-color: #2a3a52; }
+.team-stats { font-size: 0.8rem; color: #94a3b8; margin-top: 5px; }
+
+/* Match Screen */
+.scoreboard {
+    display: flex;
+    justify-content: space-between;
+    font-size: 2rem;
+    font-weight: bold;
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+.match-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.clock { font-size: 1.5rem; font-weight: bold; color: #fbbf24; }
+.speed-btn { background: #334155; color: white; margin-left: 5px; }
+.speed-btn.active { background: #fbbf24; color: black; }
+.event-alert {
+    background: #ef4444; color: white; text-align: center;
+    padding: 15px; font-size: 1.5rem; font-weight: bold;
+    border-radius: 8px; margin-bottom: 15px;
+}
+.commentary-box {
+    background: #1e293b; padding: 15px; border-radius: 8px;
+    height: 200px; overflow-y: auto; margin-bottom: 15px;
+}
+#event-log li { margin-bottom: 8px; list-style-type: none; border-bottom: 1px solid #334155; padding-bottom: 4px; }
+
+/* Post Match */
+.post-match-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+#gw-results li { padding: 8px; border-bottom: 1px solid #334155; list-style-type: none; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th, td { padding: 10px; text-align: left; border-bottom: 1px solid #334155; }
+th { background-color: #1e293b; }
+.player-team { background-color: #1e40af !important; font-weight: bold; }
