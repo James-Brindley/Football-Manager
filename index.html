@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FootyManager | Pro</title>
+    <title>FootyManager Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
         <div id="screen-selection" class="screen">
             <div class="header-block">
                 <h1>Footy<span>Manager</span></h1>
-                <p>Select your club for the 24/25 campaign</p>
+                <p>Choose your club for the 24/25 Season</p>
             </div>
             <div id="team-list" class="grid-container scrollable"></div>
         </div>
@@ -72,14 +72,34 @@
                     <div class="score-center" id="m-score">0 - 0</div>
                     <div class="score-team"><span id="m-a-name">Away</span><img id="m-a-logo" src=""></div>
                 </div>
-                
                 <div id="m-alert" class="event-banner hidden">GOAL!</div>
-                
                 <div class="commentary-box scrollable">
                     <ul id="m-events"></ul>
                 </div>
             </div>
-            <button id="btn-finish-match" class="btn-primary hidden" onclick="finalizeWeek()">Continue</button>
+            <button id="btn-finish-match" class="btn-primary hidden" onclick="finalizeWeek()">Full Time Results</button>
+        </div>
+
+        <div id="screen-post-match" class="screen hidden">
+            <div class="header-block">
+                <h2>Weekly Roundup</h2>
+            </div>
+            <div class="post-match-layout scrollable">
+                <div class="summary-section">
+                    <h3>GW Results</h3>
+                    <div id="post-results-list" class="fixture-list"></div>
+                </div>
+                <div class="summary-section">
+                    <h3>Standings</h3>
+                    <div class="table-container small-text">
+                        <table id="post-league-table">
+                            <thead><tr><th>#</th><th>Club</th><th>P</th><th>GD</th><th>Pts</th></tr></thead>
+                            <tbody id="post-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <button onclick="returnToHub()" class="btn-primary mt-15">Continue to Hub</button>
         </div>
 
         <div id="screen-standings" class="screen hidden">
@@ -87,7 +107,7 @@
                 <h2>League Table</h2>
             </div>
             <div class="table-container scrollable">
-                <table id="league-table">
+                <table>
                     <thead><tr><th>#</th><th>Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead>
                     <tbody id="table-body"></tbody>
                 </table>
