@@ -1,4 +1,4 @@
-// --- 1. 24/25 PREMIER LEAGUE DATA ---
+// --- DATA SET ---
 const teamsData = [
     { name: "Man City", att: 94, mid: 92, def: 88, color: "#6CABDD" },
     { name: "Arsenal", att: 90, mid: 91, def: 92, color: "#EF0107" },
@@ -19,7 +19,7 @@ const teamsData = [
     { name: "Nott'm Forest", att: 74, mid: 73, def: 74, color: "#DD0000" },
     { name: "Leicester", att: 73, mid: 72, def: 71, color: "#003090" },
     { name: "Ipswich", att: 71, mid: 70, def: 69, color: "#0000FF" },
-    { name: "Southampton", att: 99, mid: 99, def: 99, color: "#D71920" }
+    { name: "Southampton", att: 70, mid: 71, def: 70, color: "#D71920" }
 ];
 
 let teams = teamsData.map((t, i) => ({
@@ -27,22 +27,23 @@ let teams = teamsData.map((t, i) => ({
     logo: `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=${t.color.replace('#','')}&color=fff&bold=true`
 }));
 
-// --- 2. STATE ---
+// --- STATE ---
 let playerTeamId = null;
 let currentWeek = 0;
 let schedule = [];
 let currentWeekResults = [];
 let playerMatchData = null;
-
-let currentMinute = 0;
-let currentExtraMinute = 0;
 let tickerSpeed = 1000;
 let tickerInterval = null;
+let currentMinute = 0;
+let currentExtraMinute = 0;
 let isSecondHalf = false;
 
+// --- INITIALIZATION ---
 function init() {
     generateSchedule();
     renderTeamSelection();
+    setupSettings();
 }
 
 function generateSchedule() {
@@ -62,97 +63,68 @@ function renderTeamSelection() {
     teams.forEach(t => {
         const div = document.createElement('div');
         div.className = 'team-card';
-        div.innerHTML = `<img src="${t.logo}" style="width:40px; margin-bottom:5px;"><br><strong>${t.name}</strong>`;
-        div.onclick = () => { playerTeamId = t.id; switchScreen('preMatch'); setupPreMatch(); };
+        div.innerHTML = `
+            <img src="${t.logo}" style="width:50px; margin-bottom:10px;">
+            <div style="font-weight:800">${t.name}</div>
+            <div class="stat-bar">ATT: ${t.att} MID: ${t.mid} DEF: ${t.def}</div>
+        `;
+        div.onclick = () => { playerTeamId = t.id; updateHub(); switchScreen('hub'); };
         list.appendChild(div);
     });
 }
 
-// --- 3. SIMULATION ENGINE ---
+function setupSettings() {
+    const slider = document.getElementById('speed-slider');
+    const valLabel = document.getElementById('speed-val');
+    slider.oninput = (e) => {
+        let val = parseInt(e.target.value);
+        valLabel.innerText = val + "x";
+        tickerSpeed = 1000 / val;
+        if (tickerInterval) { clearInterval(tickerInterval); runTicker(); }
+    };
+}
+
+// --- HUB LOGIC ---
+function updateHub() {
+    const pTeam = teams.find(t => t.id === playerTeamId);
+    document.getElementById('hub-my-team-name').innerText = pTeam.name;
+    document.getElementById('hub-my-logo').src = pTeam.logo;
+    document.getElementById('hub-gw-status').innerText = `Gameweek ${currentWeek + 1} of 38`;
+
+    // Next Match
+    const match = schedule[currentWeek].find(m => m.home === playerTeamId || m.away === playerTeamId);
+    const h = teams.find(t => t.id === match.home);
+    const a = teams.find(t => t.id === match.away);
+    document.getElementById('hub-home-name').innerText = h.name;
+    document.getElementById('hub-home-logo').src = h.logo;
+    document.getElementById('hub-away-name').innerText = a.name;
+    document.getElementById('hub-away-logo').src = a.logo;
+}
+
+// --- MATCH ENGINE ---
 function simulateMatch(hId, aId) {
-    let h = {...teams.find(t => t.id === hId)};
-    let a = {...teams.find(t => t.id === aId)};
-    let events = [];
-    let hG = 0, aG = 0;
-    let h1EventsCount = 0, h2EventsCount = 0;
+    let h = {...teams.find(t => t.id === hId)}, a = {...teams.find(t => t.id === aId)};
+    let events = [], hG = 0, aG = 0, e1 = 0, e2 = 0;
 
     for (let min = 1; min <= 90; min++) {
         let hProb = 0.015 * (h.att / a.def) * (h.mid / a.mid) * 1.1;
         let aProb = 0.015 * (a.att / h.def) * (a.mid / h.mid);
         let roll = Math.random();
-        
-        let eventThisMin = false;
 
         if (roll < hProb) { 
             hG++; events.push({ min, type: 'Goal', teamName: h.name, isHome: true }); 
-            eventThisMin = true;
+            if (min <= 45) e1++; else e2++;
         } else if (roll > 1 - aProb) { 
             aG++; events.push({ min, type: 'Goal', teamName: a.name, isHome: false }); 
-            eventThisMin = true;
-        } else if (Math.random() < 0.018) {
-            eventThisMin = true;
+            if (min <= 45) e1++; else e2++;
+        } else if (Math.random() < 0.02) {
             let isHome = Math.random() > 0.5;
-            let target = isHome ? h : a;
-            let isRed = Math.random() < 0.15;
-            if (isRed) {
-                target.att -= 12; target.mid -= 12; target.def -= 12;
-                events.push({ min, type: 'Red Card', teamName: target.name, isHome });
-                if (Math.random() < 0.4) {
-                    if (!isHome) hG++; else aG++;
-                    events.push({ min, type: 'Penalty Goal', teamName: !isHome ? h.name : a.name, isHome: !isHome });
-                }
-            } else {
-                let stats = ['att', 'mid', 'def'];
-                target[stats[Math.floor(Math.random()*3)]] -= 2;
-                events.push({ min, type: 'Yellow Card', teamName: target.name, isHome });
-                if (Math.random() < 0.1) {
-                    if (!isHome) hG++; else aG++;
-                    events.push({ min, type: 'Freekick Goal', teamName: !isHome ? h.name : a.name, isHome: !isHome });
-                }
-            }
-        }
-
-        if (eventThisMin) {
-            if (min <= 45) h1EventsCount++; else h2EventsCount++;
+            events.push({ min, type: 'Yellow Card', teamName: isHome ? h.name : a.name, isHome });
+            if (min <= 45) e1++; else e2++;
         }
     }
-
-    return { 
-        hId, aId, hName: h.name, aName: a.name, hG, aG, events,
-        h1Extra: Math.ceil(h1EventsCount * 0.5) || 1, 
-        h2Extra: Math.ceil(h2EventsCount * 0.5) || 2 
-    };
+    return { hId, aId, hName: h.name, aName: a.name, hG, aG, events, h1Extra: Math.max(1, e1), h2Extra: Math.max(1, e2) };
 }
-
-// --- 4. TICKER LOGIC ---
-function setupPreMatch() {
-    document.getElementById('gw-number').innerText = currentWeek + 1;
-    const match = schedule[currentWeek].find(m => m.home === playerTeamId || m.away === playerTeamId);
-    const h = teams.find(t => t.id === match.home), a = teams.find(t => t.id === match.away);
-    document.getElementById('intro-home-name').innerText = h.name;
-    document.getElementById('intro-home-logo').src = h.logo;
-    document.getElementById('intro-away-name').innerText = a.name;
-    document.getElementById('intro-away-logo').src = a.logo;
-}
-
-document.getElementById('btn-start-match').onclick = () => {
-    currentWeekResults = schedule[currentWeek].map(m => simulateMatch(m.home, m.away));
-    playerMatchData = currentWeekResults.find(m => m.hId === playerTeamId || m.aId === playerTeamId);
-    
-    document.getElementById('match-home-team').innerText = playerMatchData.hName;
-    document.getElementById('match-home-logo').src = teams.find(t => t.name === playerMatchData.hName).logo;
-    document.getElementById('match-away-team').innerText = playerMatchData.aName;
-    document.getElementById('match-away-logo').src = teams.find(t => t.name === playerMatchData.aName).logo;
-    
-    document.getElementById('match-score').innerText = "0 - 0";
-    document.getElementById('event-log').innerHTML = '';
-    document.getElementById('btn-continue-post').classList.add('hidden');
-    document.getElementById('btn-resume-half').classList.add('hidden');
-    
-    currentMinute = 0; currentExtraMinute = 0; isSecondHalf = false;
-    switchScreen('match');
-    runTicker();
-};
 
 function runTicker() { tickerInterval = setInterval(tick, tickerSpeed); }
 
@@ -164,40 +136,36 @@ function tick() {
         currentMinute++;
     } else if (currentExtraMinute < extraLimit) {
         currentExtraMinute++;
-        document.getElementById('extra-time-display').innerText = ` + ${currentExtraMinute}`;
+        document.getElementById('extra-time-display').innerText = `+${currentExtraMinute}`;
     } else {
-        // Half ended
         clearInterval(tickerInterval);
         if (!isSecondHalf) {
-            logEvent("⏸️ Half Time.");
-            document.getElementById('btn-resume-half').classList.remove('hidden');
+            logEvent("⏸️ HALF TIME. Returning in 3s...");
+            setTimeout(() => {
+                isSecondHalf = true; currentExtraMinute = 0;
+                document.getElementById('extra-time-display').innerText = '';
+                runTicker();
+            }, 3000);
         } else {
-            logEvent("🏁 Full Time.");
-            document.getElementById('btn-continue-post').classList.remove('hidden');
+            logEvent("🏁 FULL TIME.");
+            document.getElementById('btn-return-hub').classList.add('hidden'); // Logic to force user to see report
+            finishMatch();
         }
         return;
     }
 
     document.getElementById('match-clock').innerText = currentMinute;
-    
-    // Check events
-    let displayMin = currentExtraMinute > 0 ? limit : currentMinute;
-    let evts = playerMatchData.events.filter(e => e.min === displayMin);
-    
-    // Only trigger events once per actual minute (ignore extra minutes for simplified simulation)
-    // We treat events in the 45th and 90th minute as possibly occurring in extra time
-    if (evts.length > 0 && currentExtraMinute === 0) {
-        handleEvents(evts);
-    }
+    let dispMin = currentExtraMinute > 0 ? limit : currentMinute;
+    let evts = playerMatchData.events.filter(e => e.min === dispMin && currentExtraMinute === 0);
+    if (evts.length > 0) handleEvents(evts);
 }
 
 function handleEvents(evts) {
     clearInterval(tickerInterval);
     evts.forEach(e => {
-        let icon = e.type.includes('Goal') ? '⚽' : (e.type === 'Red Card' ? '🟥' : '🟨');
-        logEvent(`${icon} ${e.min}': ${e.type} - ${e.teamName}`);
-        showEventAlert(`${e.type.toUpperCase()}!`, e.type.includes('Goal') ? '#10b981' : (e.type === 'Red Card' ? '#ef4444' : '#eab308'));
-        updateScore();
+        logEvent(`${e.min}': ${e.type} - ${e.teamName}`);
+        showEventAlert(e.type, e.type === 'Goal' ? '#10b981' : '#fbbf24');
+        updateLiveScore();
     });
     setTimeout(() => {
         document.getElementById('match-event-alert').classList.add('hidden');
@@ -205,18 +173,33 @@ function handleEvents(evts) {
     }, 1500);
 }
 
-document.getElementById('btn-resume-half').onclick = () => {
-    isSecondHalf = true;
-    currentExtraMinute = 0;
-    document.getElementById('extra-time-display').innerText = '';
-    document.getElementById('btn-resume-half').classList.add('hidden');
-    runTicker();
-};
+function finishMatch() {
+    setTimeout(() => {
+        processWeek();
+        renderPostMatch();
+        switchScreen('postMatch');
+    }, 2000);
+}
 
-// --- 5. UI UTILS ---
-function updateScore() {
-    let hG = playerMatchData.events.filter(e => e.min <= currentMinute && e.type.includes('Goal') && e.isHome).length;
-    let aG = playerMatchData.events.filter(e => e.min <= currentMinute && e.type.includes('Goal') && !e.isHome).length;
+// --- UTILS ---
+function switchScreen(n) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+    document.getElementById(`screen-${n}`).classList.remove('hidden');
+}
+
+function logEvent(t) {
+    const li = document.createElement('li'); li.innerText = t;
+    document.getElementById('event-log').prepend(li);
+}
+
+function showEventAlert(t, c) {
+    const a = document.getElementById('match-event-alert');
+    a.innerText = t; a.style.backgroundColor = c; a.classList.remove('hidden');
+}
+
+function updateLiveScore() {
+    let hG = playerMatchData.events.filter(e => e.min <= currentMinute && e.type === 'Goal' && e.isHome).length;
+    let aG = playerMatchData.events.filter(e => e.min <= currentMinute && e.type === 'Goal' && !e.isHome).length;
     document.getElementById('match-score').innerText = `${hG} - ${aG}`;
 }
 
@@ -233,50 +216,55 @@ function processWeek() {
 }
 
 function renderPostMatch() {
-    const resList = document.getElementById('gw-results');
-    resList.innerHTML = '';
-    currentWeekResults.forEach(r => {
-        let li = document.createElement('li');
-        li.innerHTML = `<small>${r.hName}</small> <strong>${r.hG} - ${r.aG}</strong> <small>${r.aName}</small>`;
-        resList.appendChild(li);
-    });
     const tbody = document.getElementById('league-table-body');
     tbody.innerHTML = '';
     teams.forEach((t, i) => {
         let tr = document.createElement('tr');
         if (t.id === playerTeamId) tr.className = 'player-team';
-        tr.innerHTML = `<td>${i+1}</td><td>${t.name}</td><td>${t.played}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td><td>${t.gd}</td><td>${t.points}</td>`;
+        tr.innerHTML = `<td>${i+1}</td><td>${t.name}</td><td>${t.played}</td><td>${t.gd}</td><td><strong>${t.points}</strong></td>`;
         tbody.appendChild(tr);
+    });
+
+    const resList = document.getElementById('gw-results');
+    resList.innerHTML = '';
+    currentWeekResults.forEach(r => {
+        let li = document.createElement('li');
+        li.innerHTML = `${r.hName} <b>${r.hG} - ${r.aG}</b> ${r.aName}`;
+        resList.appendChild(li);
     });
 }
 
-document.getElementById('btn-continue-post').onclick = () => { 
-    processWeek(); renderPostMatch(); switchScreen('postMatch'); 
-    document.getElementById('extra-time-display').innerText = '';
+// Navigation triggers
+document.getElementById('btn-go-to-prematch').onclick = () => {
+    const match = schedule[currentWeek].find(m => m.home === playerTeamId || m.away === playerTeamId);
+    const h = teams.find(t => t.id === match.home), a = teams.find(t => t.id === match.away);
+    document.getElementById('i-h-logo').src = h.logo;
+    document.getElementById('i-a-logo').src = a.logo;
+    document.querySelector('#screen-pre-match h3').innerText = `${h.name} vs ${a.name}`;
+    switchScreen('preMatch');
 };
-document.getElementById('btn-next-week').onclick = () => { currentWeek++; setupPreMatch(); switchScreen('preMatch'); };
 
-function logEvent(txt) { 
-    const li = document.createElement('li'); li.innerText = txt; 
-    document.getElementById('event-log').prepend(li); 
-}
-function showEventAlert(txt, col) { 
-    const a = document.getElementById('match-event-alert'); 
-    a.innerText = txt; a.style.backgroundColor = col; a.classList.remove('hidden'); 
-}
-function switchScreen(n) { 
-    const s = { selection: 'screen-selection', preMatch: 'screen-pre-match', match: 'screen-match', postMatch: 'screen-post-match' };
-    Object.values(s).forEach(id => document.getElementById(id).classList.add('hidden'));
-    document.getElementById(s[n]).classList.remove('hidden');
-}
+document.getElementById('btn-start-match').onclick = () => {
+    currentWeekResults = schedule[currentWeek].map(m => simulateMatch(m.home, m.away));
+    playerMatchData = currentWeekResults.find(m => m.hId === playerTeamId || m.aId === playerTeamId);
+    document.getElementById('m-h-name').innerText = playerMatchData.hName;
+    document.getElementById('m-a-name').innerText = playerMatchData.aName;
+    document.getElementById('m-h-logo').src = teams.find(t => t.name === playerMatchData.hName).logo;
+    document.getElementById('m-a-logo').src = teams.find(t => t.name === playerMatchData.aName).logo;
+    currentMinute = 0; currentExtraMinute = 0; isSecondHalf = false;
+    document.getElementById('event-log').innerHTML = '';
+    switchScreen('match');
+    runTicker();
+};
 
-document.querySelectorAll('.speed-btn').forEach(b => {
-    b.onclick = (e) => {
-        document.querySelectorAll('.speed-btn').forEach(btn => btn.classList.remove('active'));
-        e.target.classList.add('active');
-        tickerSpeed = parseInt(e.target.dataset.speed);
-        if (tickerInterval) { clearInterval(tickerInterval); runTicker(); }
-    };
-});
+document.getElementById('btn-return-hub').onclick = () => {
+    currentWeek++;
+    updateHub();
+    switchScreen('hub');
+};
+
+// Calendar Logic
+document.getElementById('btn-view-calendar').onclick = () => document.getElementById('calendar-overlay').classList.remove('hidden');
+function closeCalendar() { document.getElementById('calendar-overlay').classList.add('hidden'); }
 
 init();
