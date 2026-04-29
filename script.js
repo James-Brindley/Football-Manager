@@ -31,7 +31,8 @@ let teams = teamsData.map((t, i) => ({
 let playerTeamId = null;
 let currentWeek = 0;
 let schedule = [];
-let tickerSpeed = 1000;
+// Default base speed is 1000ms. 5x speed = 200ms
+let tickerSpeed = 200; 
 let tickerInterval = null;
 
 // Match state variables
@@ -89,6 +90,7 @@ function updateHub() {
     const t = teams.find(x => x.id === playerTeamId);
     document.getElementById('hub-name').innerText = t.name;
     document.getElementById('hub-logo').src = t.logo;
+    document.getElementById('hub-stats').innerText = `ATT: ${t.att} | MID: ${t.mid} | DEF: ${t.def}`;
     document.getElementById('hub-gw').innerText = `GW ${currentWeek + 1}`;
     
     const m = schedule[currentWeek].find(x => x.h === playerTeamId || x.a === playerTeamId);
@@ -99,10 +101,15 @@ function updateHub() {
 function goToPreMatch() {
     const m = schedule[currentWeek].find(x => x.h === playerTeamId || x.a === playerTeamId);
     const h = teams.find(x => x.id === m.h), a = teams.find(x => x.id === m.a);
+    
     document.getElementById('pre-h-logo').src = h.logo;
     document.getElementById('pre-h-name').innerText = h.name;
+    document.getElementById('pre-h-stats').innerText = `A:${h.att} M:${h.mid} D:${h.def}`;
+    
     document.getElementById('pre-a-logo').src = a.logo;
     document.getElementById('pre-a-name').innerText = a.name;
+    document.getElementById('pre-a-stats').innerText = `A:${a.att} M:${a.mid} D:${a.def}`;
+    
     switchScreen('pre-match');
 }
 
@@ -111,6 +118,47 @@ document.getElementById('btn-start-match').onclick = () => {
     const m = schedule[currentWeek].find(x => x.h === playerTeamId || x.a === playerTeamId);
     const h = teams.find(x => x.id === m.h), a = teams.find(x => x.id === m.a);
     
+    setupMatchUI(h, a);
+    matchEvents = generateMatchEvents(h, a);
+    switchScreen('match');
+    runTicker();
+};
+
+function skipMatch() {
+    const m = schedule[currentWeek].find(x => x.h === playerTeamId || x.a === playerTeamId);
+    const h = teams.find(x => x.id === m.h), a = teams.find(x => x.id === m.a);
+    
+    setupMatchUI(h, a);
+    matchEvents = generateMatchEvents(h, a);
+    
+    let hG = 0, aG = 0;
+    
+    // Process all events instantly
+    matchEvents.forEach(ev => {
+        let icon = ev.type === 'GOAL' ? '⚽' : '🟨';
+        let logTxt = `${icon} <b>${ev.min}'</b> - ${ev.type} for ${ev.team}! ${ev.txt}`;
+        logEvent(logTxt, ev.type === 'GOAL');
+        
+        if (ev.type === 'GOAL') {
+            if (ev.isHome) hG++; else aG++;
+        }
+    });
+
+    logEvent(`🏁 FULL TIME (Quick Sim).`);
+    
+    // Update Final UI
+    document.getElementById('m-score').innerText = `${hG} - ${aG}`;
+    document.getElementById('m-clock').innerText = "90";
+    document.getElementById('btn-finish-match').classList.remove('hidden');
+    
+    // Ensure state allows finalizeWeek to run properly
+    currentMinute = 90;
+    isSecondHalf = true;
+    
+    switchScreen('match');
+}
+
+function setupMatchUI(h, a) {
     document.getElementById('m-h-name').innerText = h.name;
     document.getElementById('m-a-name').innerText = a.name;
     document.getElementById('m-h-logo').src = h.logo;
@@ -123,11 +171,7 @@ document.getElementById('btn-start-match').onclick = () => {
     extraMin = 0; 
     isSecondHalf = false;
     document.getElementById('m-extra').innerText = "";
-    
-    matchEvents = generateMatchEvents(h, a);
-    switchScreen('match');
-    runTicker();
-};
+}
 
 function generateMatchEvents(h, a) {
     let events = [];
@@ -198,7 +242,7 @@ function tick() {
         } else {
             flashEventAlert('YELLOW CARD', 'var(--card-yellow)');
         }
-        setTimeout(runTicker, 1500);
+        setTimeout(runTicker, tickerSpeed * 1.5); // Pause slightly longer for events relative to chosen speed
     }
 }
 
@@ -356,9 +400,12 @@ function renderCalendar() {
 function setupSettings() {
     const slider = document.getElementById('speed-slider');
     slider.oninput = (e) => {
-        let val = e.target.value;
-        document.getElementById('speed-label').innerText = val + "x";
-        tickerSpeed = 1000 / val;
+        let val = parseInt(e.target.value); // 1 to 10
+        let multiplier = val * 5; // 5 to 50
+        document.getElementById('speed-label').innerText = multiplier + "x";
+        
+        // Base speed = 1000ms. If multiplier is 50, speed is 1000/50 = 20ms
+        tickerSpeed = 1000 / multiplier;
     };
 }
 
