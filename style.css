@@ -50,7 +50,9 @@ body {
 .scrollable { overflow-y: auto; padding-right: 5px; }
 .scrollable::-webkit-scrollbar { width: 6px; }
 .scrollable::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+.mt-5 { margin-top: 5px; }
 .mt-15 { margin-top: 15px; }
+.mb-5 { margin-bottom: 5px; }
 
 @keyframes fadeScale { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 
@@ -60,7 +62,8 @@ body {
 .header-block p { color: var(--text-muted); font-size: 0.9rem; margin-top: 5px; }
 
 /* Badges & Labels */
-.badge { background: var(--border); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+.badge { background: var(--border); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; display: inline-block; }
+.stats-badge { background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; color: var(--text-muted); font-weight: bold; display: inline-block; }
 .label { font-size: 0.8rem; color: var(--accent); font-weight: 800; letter-spacing: 1px; margin-bottom: 10px; }
 
 /* Team Selection Grid */
@@ -87,8 +90,10 @@ body {
 /* Hub Styling */
 .hub-header { display: flex; justify-content: center; margin-bottom: 25px; flex-shrink: 0; }
 .team-badge { display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.2); padding: 15px 25px; border-radius: 50px; }
-.team-badge img { width: 50px; }
-.team-badge h2 { font-size: 1.2rem; margin-bottom: 4px; }
+.team-badge img { width: 60px; }
+.hub-team-info { display: flex; flex-direction: column; align-items: flex-start; }
+.hub-team-info h2 { font-size: 1.2rem; margin-bottom: 2px; }
+
 .next-match-card { background: linear-gradient(135deg, var(--pitch), var(--pitch-light)); padding: 40px; border-radius: 20px; text-align: center; margin-bottom: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); flex-shrink: 0;}
 .next-match-card h2 { font-size: 2rem; margin-bottom: 25px; }
 .nav-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
@@ -105,7 +110,7 @@ body {
 /* Matchup / Pre-Match */
 .matchup-display { display: flex; justify-content: center; align-items: center; gap: 30px; flex: 1; }
 .team-side { text-align: center; }
-.team-side img { width: 90px; margin-bottom: 15px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); }
+.team-side img { width: 90px; margin-bottom: 10px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); }
 .vs-badge { font-size: 1.5rem; font-weight: 900; color: var(--text-muted); background: rgba(0,0,0,0.3); width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
 .action-buttons { flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
 
