@@ -23,9 +23,10 @@
             <div class="hub-header">
                 <div class="team-badge">
                     <img id="hub-logo" src="">
-                    <div>
+                    <div class="hub-team-info">
                         <h2 id="hub-name">Team</h2>
-                        <span id="hub-gw" class="badge">GW 1</span>
+                        <div id="hub-stats" class="stats-badge mt-5 mb-5">A:0 M:0 D:0</div>
+                        <span id="hub-gw" class="badge mt-5">GW 1</span>
                     </div>
                 </div>
             </div>
@@ -52,16 +53,19 @@
                 <div class="team-side">
                     <img id="pre-h-logo" src="">
                     <h3 id="pre-h-name">Home</h3>
+                    <div id="pre-h-stats" class="stats-badge">A:0 M:0 D:0</div>
                 </div>
                 <div class="vs-badge">VS</div>
                 <div class="team-side">
                     <img id="pre-a-logo" src="">
                     <h3 id="pre-a-name">Away</h3>
+                    <div id="pre-a-stats" class="stats-badge">A:0 M:0 D:0</div>
                 </div>
             </div>
             <div class="action-buttons">
                 <button id="btn-start-match" class="btn-primary">Kick Off</button>
-                <button onclick="switchScreen('hub')" class="btn-secondary">Back to Hub</button>
+                <button onclick="skipMatch()" class="btn-secondary">Skip to End (Quick Sim)</button>
+                <button onclick="switchScreen('hub')" class="btn-secondary" style="border-color: transparent;">Back to Hub</button>
             </div>
         </div>
 
@@ -83,7 +87,7 @@
                     <ul id="m-events"></ul>
                 </div>
             </div>
-            <button id="btn-finish-match" class="btn-primary hidden" onclick="finalizeWeek()">Continue</button>
+            <button id="btn-finish-match" class="btn-primary hidden mt-15" onclick="finalizeWeek()">Continue</button>
         </div>
 
         <!-- 5. POST-MATCH SUMMARY -->
@@ -147,8 +151,10 @@
                 <h2>Settings</h2>
             </div>
             <div class="settings-card">
-                <label>Match Speed: <span id="speed-label" class="badge">1x</span></label>
-                <input type="range" id="speed-slider" min="1" max="20" value="1" class="slider">
+                <label>Match Speed: <span id="speed-label" class="badge">5x</span></label>
+                <!-- Slider goes from 1 to 10, logic scales this to 5x to 50x -->
+                <input type="range" id="speed-slider" min="1" max="10" value="1" class="slider">
+                <p class="label mt-15" style="text-align: center;">1 = 5x Speed | 10 = 50x Speed</p>
             </div>
             <button onclick="switchScreen('hub')" class="btn-secondary mt-15">Back to Hub</button>
         </div>
