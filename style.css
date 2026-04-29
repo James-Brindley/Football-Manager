@@ -27,7 +27,7 @@ body {
 #app-container { 
     width: 100%; 
     max-width: 850px; 
-    height: 90vh; /* Fixed height to fit screen */
+    height: 90vh; 
     background: var(--app-bg); 
     border-radius: 24px; 
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
@@ -43,7 +43,7 @@ body {
     display: flex; 
     flex-direction: column; 
     animation: fadeScale 0.3s ease; 
-    overflow: hidden; /* Keep content inside */
+    overflow: hidden; 
 }
 
 .hidden { display: none !important; }
@@ -126,6 +126,16 @@ body {
 .commentary-box li.highlight { color: var(--goal-color); font-weight: bold; background: rgba(251, 191, 36, 0.1); border-radius: 8px; }
 @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
 
+/* Post-Match Split View */
+.split-view { display: flex; flex-direction: row; gap: 15px; flex: 1; overflow: hidden; margin-top: 10px; }
+.split-pane { background: rgba(0,0,0,0.2); border-radius: 16px; padding: 15px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.mini-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.mini-table th, .mini-table td { padding: 8px 5px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+@media (max-width: 650px) {
+    .split-view { flex-direction: column; }
+}
+
 /* Tables */
 .table-container { background: rgba(0,0,0,0.2); border-radius: 16px; padding: 10px; flex: 1; }
 table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
@@ -138,11 +148,11 @@ td:nth-child(2) { text-align: left; font-weight: bold; }
 
 /* Calendar */
 .calendar-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 12px;}
-.fixture-list { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-.fixture-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 12px 20px; border-radius: 10px; }
+.fixture-list { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.fixture-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 15px; border-radius: 10px; font-size: 0.9rem; }
 .fixture-team { flex: 1; font-weight: bold; }
 .fixture-team.away { text-align: right; }
-.fixture-score { background: var(--bg-color); padding: 5px 15px; border-radius: 8px; font-weight: bold; font-family: monospace; font-size: 1.1rem; }
+.fixture-score { background: var(--bg-color); padding: 5px 12px; border-radius: 8px; font-weight: bold; font-family: monospace; font-size: 1rem; }
 
 /* Settings */
 .settings-card { background: rgba(0,0,0,0.2); padding: 25px; border-radius: 16px; flex: 1; }
