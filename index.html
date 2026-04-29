@@ -3,17 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FootyManager | Pro</title>
+    <title>FootyManager | Pro Career</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="app-container">
         
-        <!-- 1. TEAM SELECTION -->
-        <div id="screen-selection" class="screen">
+        <!-- 0. LEAGUE SELECTION -->
+        <div id="screen-league-select" class="screen">
             <div class="header-block">
                 <h1>Footy<span>Manager</span></h1>
-                <p>Select your club for the 24/25 campaign</p>
+                <p>Select a league to begin your managerial career</p>
+            </div>
+            <div id="league-list" class="grid-container scrollable mt-15"></div>
+        </div>
+
+        <!-- 1. TEAM SELECTION -->
+        <div id="screen-selection" class="screen hidden">
+            <div class="header-block">
+                <button onclick="switchScreen('league-select')" class="btn-icon" style="float: left;">◀ Back</button>
+                <h2>Select Club</h2>
+                <p>Choose your team for the <span id="sel-season-label"></span> season</p>
             </div>
             <div id="team-list" class="grid-container scrollable"></div>
         </div>
@@ -26,15 +36,16 @@
                     <div class="hub-team-info">
                         <h2 id="hub-name">Team</h2>
                         <div id="hub-stats" class="stats-badge mt-5 mb-5">A:0 M:0 D:0</div>
-                        <span id="hub-gw" class="badge mt-5">GW 1</span>
+                        <span id="hub-season" class="badge mt-5">Season 2024/25</span>
                     </div>
                 </div>
             </div>
 
             <div class="next-match-card">
-                <p class="label">NEXT FIXTURE</p>
+                <p class="label" id="hub-next-comp">NEXT FIXTURE</p>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px;" id="hub-next-date">10 Aug 2024</p>
                 <h2 id="hub-next-opp">vs Opponent</h2>
-                <button onclick="goToPreMatch()" class="btn-primary pulse-btn">Match Prep</button>
+                <button onclick="goToPreMatch()" class="btn-primary pulse-btn mt-15">Match Prep</button>
             </div>
             
             <div class="nav-grid">
@@ -47,7 +58,8 @@
         <!-- 3. PRE-MATCH -->
         <div id="screen-pre-match" class="screen hidden">
             <div class="header-block">
-                <h2>Matchday</h2>
+                <h2 id="pre-comp-title">Matchday</h2>
+                <p id="pre-date-title">Date</p>
             </div>
             <div class="matchup-display">
                 <div class="team-side">
@@ -87,44 +99,42 @@
                     <ul id="m-events"></ul>
                 </div>
             </div>
-            <button id="btn-finish-match" class="btn-primary hidden mt-15" onclick="finalizeWeek()">Continue</button>
+            <button id="btn-finish-match" class="btn-primary hidden mt-15" onclick="finishPlayerMatch()">Continue</button>
         </div>
 
         <!-- 5. POST-MATCH SUMMARY -->
         <div id="screen-post-match" class="screen hidden">
             <div class="header-block">
-                <h2>Gameweek <span id="post-gw-title"></span> Summary</h2>
+                <h2>Match Summary</h2>
+                <p id="post-date-title"></p>
             </div>
             
             <div class="split-view">
-                <!-- Results Side -->
                 <div class="split-pane">
-                    <p class="label" style="text-align: center;">RESULTS</p>
+                    <p class="label" style="text-align: center;">RECENT RESULTS</p>
                     <div id="post-gw-results" class="fixture-list scrollable"></div>
                 </div>
-                <!-- Table Side -->
                 <div class="split-pane">
                     <p class="label" style="text-align: center;">STANDINGS</p>
                     <div class="table-container scrollable" style="padding: 0; background: transparent;">
-                        <table id="mini-league-table" class="mini-table">
+                        <table class="mini-table">
                             <thead><tr><th>#</th><th>Club</th><th>GD</th><th>Pts</th></tr></thead>
                             <tbody id="post-table-body"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
-            
-            <button onclick="switchScreen('hub')" class="btn-primary mt-15">Return to Hub</button>
+            <button onclick="advanceTimeline()" class="btn-primary mt-15">Continue to Next Date</button>
         </div>
 
         <!-- 6. STANDINGS -->
         <div id="screen-standings" class="screen hidden">
             <div class="header-block">
-                <h2>League Table</h2>
+                <h2 id="standings-title">League Table</h2>
             </div>
             <div class="table-container scrollable">
                 <table id="league-table">
-                    <thead><tr><th>#</th><th>Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead>
+                    <thead><tr><th>#</th><th>Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr></thead>
                     <tbody id="table-body"></tbody>
                 </table>
             </div>
@@ -137,11 +147,14 @@
                 <h2>Fixtures & Results</h2>
             </div>
             <div class="calendar-controls">
-                <button onclick="changeCalendarWeek(-1)" class="btn-icon">◀</button>
-                <h3 id="cal-gw-title">Gameweek 1</h3>
-                <button onclick="changeCalendarWeek(1)" class="btn-icon">▶</button>
+                <select id="cal-filter" onchange="renderCalendar()" class="dropdown">
+                    <option value="All">All Competitions</option>
+                    <option value="League">League Matches</option>
+                    <option value="FA Cup">FA Cup</option>
+                    <option value="Carabao Cup">Carabao Cup</option>
+                </select>
             </div>
-            <div id="calendar-list" class="fixture-list scrollable"></div>
+            <div id="calendar-list" class="fixture-list scrollable mt-15"></div>
             <button onclick="switchScreen('hub')" class="btn-secondary mt-15">Back to Hub</button>
         </div>
 
@@ -151,12 +164,29 @@
                 <h2>Settings</h2>
             </div>
             <div class="settings-card">
-                <label>Match Speed: <span id="speed-label" class="badge">5x</span></label>
-                <!-- Slider goes from 1 to 10, logic scales this to 5x to 50x -->
+                <label>Match Speed: <span id="speed-label" class="badge">1x</span></label>
                 <input type="range" id="speed-slider" min="1" max="10" value="1" class="slider">
-                <p class="label mt-15" style="text-align: center;">1 = 5x Speed | 10 = 50x Speed</p>
             </div>
             <button onclick="switchScreen('hub')" class="btn-secondary mt-15">Back to Hub</button>
+        </div>
+
+        <!-- 9. END OF SEASON -->
+        <div id="screen-end-season" class="screen hidden">
+            <div class="header-block">
+                <h2>Season Complete</h2>
+                <p>Review the outcomes of the campaign</p>
+            </div>
+            <div class="settings-card scrollable" id="season-summary-content" style="text-align: center;">
+                <!-- Summary generated via JS -->
+            </div>
+            <button onclick="startNewSeason()" class="btn-primary mt-15">Start Next Season</button>
+        </div>
+
+        <!-- 10. GAME OVER -->
+        <div id="screen-game-over" class="screen hidden" style="justify-content: center; align-items: center; text-align: center;">
+            <h1 style="color: var(--card-red); font-size: 3rem; margin-bottom: 20px;">SACKED</h1>
+            <p style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 30px;">You have been relegated from League Two and dropped out of the professional leagues. Your managerial career here is over.</p>
+            <button onclick="location.reload()" class="btn-secondary">Start Over</button>
         </div>
 
     </div>
