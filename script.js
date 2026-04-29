@@ -52,7 +52,7 @@ function init() {
     setupSettings();
 }
 
-// Builds 38 GWs. Each match tracks its own results.
+// Builds 38 GWs
 function generateSchedule() {
     let ids = teams.map(t => t.id);
     for (let r = 0; r < 19; r++) {
@@ -119,7 +119,6 @@ document.getElementById('btn-start-match').onclick = () => {
     document.getElementById('m-events').innerHTML = "";
     document.getElementById('btn-finish-match').classList.add('hidden');
     
-    // Explicitly reset ALL match variables
     currentMinute = 0; 
     extraMin = 0; 
     isSecondHalf = false;
@@ -135,7 +134,7 @@ function generateMatchEvents(h, a) {
     let h1Events = 0, h2Events = 0;
 
     for (let i = 1; i <= 90; i++) {
-        let hProb = 0.015 * (h.att/a.def) * 1.05; // slight home advantage
+        let hProb = 0.015 * (h.att/a.def) * 1.05; 
         let aProb = 0.015 * (a.att/h.def);
         let r = Math.random();
         
@@ -149,7 +148,6 @@ function generateMatchEvents(h, a) {
             if (i <= 45) h1Events++; else h2Events++;
         }
     }
-    // Attach extra time calculation to the array object itself for easy access
     events.h1Extra = Math.max(1, Math.ceil(h1Events * 0.5));
     events.h2Extra = Math.max(2, Math.ceil(h2Events * 0.5));
     return events;
@@ -187,7 +185,6 @@ function tick() {
 
     document.getElementById('m-clock').innerText = currentMinute;
     
-    // Check if event happens this minute
     let ev = matchEvents.find(x => x.min === currentMinute && extraMin === 0);
     if (ev) {
         clearInterval(tickerInterval);
@@ -210,7 +207,6 @@ function updateScore() {
     let aG = matchEvents.filter(x => x.min <= currentMinute && x.type === 'GOAL' && !x.isHome).length;
     document.getElementById('m-score').innerText = `${hG} - ${aG}`;
     
-    // Quick scale animation on score change
     const scoreEl = document.getElementById('m-score');
     scoreEl.style.transform = "scale(1.2)";
     setTimeout(() => scoreEl.style.transform = "scale(1)", 200);
@@ -238,22 +234,18 @@ function finalizeWeek() {
         
         let hG, aG;
         if (m.h === playerTeamId || m.a === playerTeamId) {
-            // Player game already simulated
             hG = matchEvents.filter(x => x.type === 'GOAL' && x.isHome).length;
             aG = matchEvents.filter(x => x.type === 'GOAL' && !x.isHome).length;
         } else {
-            // Sim other games
             const evs = generateMatchEvents(h, a);
             hG = evs.filter(x => x.type === 'GOAL' && x.isHome).length;
             aG = evs.filter(x => x.type === 'GOAL' && !x.isHome).length;
         }
         
-        // Save results to schedule for calendar
         m.played = true;
         m.hG = hG;
         m.aG = aG;
 
-        // Update Global Stats
         h.played++; a.played++; h.gf += hG; h.ga += aG; a.gf += aG; a.ga += hG;
         h.gd = h.gf - h.ga; a.gd = a.gf - a.ga;
         if(hG > aG) { h.w++; h.points += 3; a.l++; }
@@ -261,12 +253,52 @@ function finalizeWeek() {
         else { h.d++; a.d++; h.points++; a.points++; }
     });
     
+    // Render post match summary BEFORE incrementing currentWeek
+    renderPostMatch(currentWeek);
+    
     currentWeek++;
     updateHub();
-    switchScreen('hub');
+    switchScreen('post-match');
 }
 
 // --- SUB PAGES ---
+
+function renderPostMatch(weekIndex) {
+    document.getElementById('post-gw-title').innerText = weekIndex + 1;
+    
+    // Render Results
+    const resultsEl = document.getElementById('post-gw-results');
+    resultsEl.innerHTML = "";
+    schedule[weekIndex].forEach(m => {
+        const h = teams.find(x => x.id === m.h), a = teams.find(x => x.id === m.a);
+        const div = document.createElement('div');
+        div.className = 'fixture-row';
+        div.innerHTML = `
+            <span class="fixture-team">${h.name}</span>
+            <span class="fixture-score">${m.hG} - ${m.aG}</span>
+            <span class="fixture-team away">${a.name}</span>
+        `;
+        if (m.h === playerTeamId || m.a === playerTeamId) div.style.borderLeft = "4px solid var(--accent)";
+        resultsEl.appendChild(div);
+    });
+
+    // Render Mini Table
+    const tbody = document.getElementById('post-table-body');
+    tbody.innerHTML = "";
+    const sorted = [...teams].sort((a,b) => b.points - a.points || b.gd - a.gd || b.gf - a.gf);
+    sorted.forEach((t, i) => {
+        const tr = document.createElement('tr');
+        if(t.id === playerTeamId) tr.className = "player-row";
+        tr.innerHTML = `
+            <td>${i+1}</td>
+            <td style="text-align: left; font-weight: bold;">${t.name}</td>
+            <td>${t.gd}</td>
+            <td><strong>${t.points}</strong></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
 function renderTable() {
     const tbody = document.getElementById('table-body');
     tbody.innerHTML = "";
@@ -287,7 +319,7 @@ function renderTable() {
 }
 
 function openCalendar() {
-    viewCalendarWeek = currentWeek >= 38 ? 37 : currentWeek; // Default to current or last
+    viewCalendarWeek = currentWeek >= 38 ? 37 : currentWeek; 
     renderCalendar();
     switchScreen('calendar');
 }
@@ -316,7 +348,6 @@ function renderCalendar() {
             <span class="fixture-score">${scoreText}</span>
             <span class="fixture-team away">${a.name}</span>
         `;
-        // Highlight player game
         if (m.h === playerTeamId || m.a === playerTeamId) div.style.borderLeft = "4px solid var(--accent)";
         el.appendChild(div);
     });
