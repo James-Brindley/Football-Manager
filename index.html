@@ -1,210 +1,268 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FootyManager | Ultimate Career</title>
+    <title>FootyManager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="app-container">
-        
-        <!-- 0. LEAGUE SELECTION -->
-        <div id="screen-league-select" class="screen">
-            <div class="header-block">
-                <h1>Footy<span>Manager</span></h1>
-                <p>Select a league to begin your managerial career</p>
-            </div>
-            <div id="league-list" class="grid-container scrollable mt-15"></div>
+<div id="app-container">
+
+    <!-- ══ SCREEN 0: LEAGUE SELECTION ══ -->
+    <div id="screen-league-select" class="screen">
+        <div class="screen-header">
+            <div class="wordmark">Footy<span>Manager</span></div>
+            <p class="subtitle">Begin your managerial career</p>
         </div>
-
-        <!-- 1. TEAM SELECTION -->
-        <div id="screen-selection" class="screen hidden">
-            <div class="header-block">
-                <button onclick="switchScreen('league-select')" class="btn-icon" style="float: left;">◀ Back</button>
-                <h2>Select Club</h2>
-                <p>Choose your team for the <span id="sel-season-label"></span> season</p>
-            </div>
-            <div id="team-list" class="grid-container scrollable"></div>
-        </div>
-
-        <!-- 2. MAIN HUB -->
-        <div id="screen-hub" class="screen hidden">
-            <div class="hub-header">
-                <div class="team-badge">
-                    <img id="hub-logo" src="">
-                    <div class="hub-team-info">
-                        <h2 id="hub-name">Team</h2>
-                        <div id="hub-stats" class="stats-badge mt-5 mb-5">A:0 M:0 D:0</div>
-                        <span id="hub-season" class="badge mt-5">Season 2024/25</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="next-match-card">
-                <p class="label" id="hub-next-comp">NEXT EVENT</p>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px;" id="hub-next-date">10 Aug 2024</p>
-                <h2 id="hub-next-opp">vs Opponent</h2>
-                <button id="hub-action-btn" onclick="handleHubAction()" class="btn-primary pulse-btn mt-15">Match Prep</button>
-            </div>
-            
-            <div class="nav-grid">
-                <button onclick="switchScreen('standings')" class="btn-nav">🏆 Table</button>
-                <button onclick="openCalendar()" class="btn-nav">📅 Calendar</button>
-                <button onclick="switchScreen('settings')" class="btn-nav">⚙️ Settings</button>
-            </div>
-        </div>
-
-        <!-- CUP DRAW MINIGAME -->
-        <div id="screen-draw" class="screen hidden" style="justify-content: center;">
-            <div class="header-block">
-                <h2 id="draw-comp-title">Cup Draw</h2>
-                <p>Drawing your next opponent...</p>
-            </div>
-            <div class="next-match-card" style="margin-top: 20px;">
-                <h3 style="color: var(--accent); margin-bottom: 10px;">YOU HAVE DRAWN:</h3>
-                <div style="height: 80px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 900; background: rgba(0,0,0,0.5); border-radius: 12px; overflow: hidden;">
-                    <span id="draw-roller">???</span>
-                </div>
-            </div>
-            <button id="btn-finish-draw" onclick="finishDraw()" class="btn-primary mt-15 hidden">Continue to Hub</button>
-        </div>
-
-        <!-- 3. PRE-MATCH -->
-        <div id="screen-pre-match" class="screen hidden">
-            <div class="header-block">
-                <h2 id="pre-comp-title">Matchday</h2>
-                <p id="pre-date-title">Date</p>
-                <p id="pre-susp-warning" style="color: var(--card-red); font-size: 0.8rem; margin-top: 5px;"></p>
-            </div>
-            <div class="matchup-display">
-                <div class="team-side">
-                    <img id="pre-h-logo" src="">
-                    <h3 id="pre-h-name">Home</h3>
-                    <div id="pre-h-stats" class="stats-badge">A:0 M:0 D:0</div>
-                </div>
-                <div class="vs-badge">VS</div>
-                <div class="team-side">
-                    <img id="pre-a-logo" src="">
-                    <h3 id="pre-a-name">Away</h3>
-                    <div id="pre-a-stats" class="stats-badge">A:0 M:0 D:0</div>
-                </div>
-            </div>
-            <div class="action-buttons">
-                <button id="btn-start-match" class="btn-primary">Kick Off</button>
-                <button onclick="skipMatch()" class="btn-secondary">Skip to End (Quick Sim)</button>
-                <button onclick="switchScreen('hub')" class="btn-secondary" style="border-color: transparent;">Back to Hub</button>
-            </div>
-        </div>
-
-        <!-- 4. MATCH SIMULATION -->
-        <div id="screen-match" class="screen hidden">
-            <div id="match-arena" class="arena">
-                <div class="clock-display">
-                    <span id="m-clock">0</span><span id="m-extra" class="extra-time"></span>'
-                </div>
-                <div class="scoreboard">
-                    <div class="score-team"><img id="m-h-logo" src=""><span id="m-h-name">Home</span></div>
-                    <div class="score-center" id="m-score">0 - 0</div>
-                    <div class="score-team"><span id="m-a-name">Away</span><img id="m-a-logo" src=""></div>
-                </div>
-                <div id="m-live-stats" style="text-align: center; font-size: 0.7rem; color: var(--text-muted); margin-top: -15px; margin-bottom: 10px;"></div>
-                
-                <div id="m-alert" class="event-banner hidden">GOAL!</div>
-                
-                <div class="commentary-box scrollable">
-                    <ul id="m-events"></ul>
-                </div>
-            </div>
-            <button id="btn-finish-match" class="btn-primary hidden mt-15" onclick="finishPlayerMatch()">Continue</button>
-        </div>
-
-        <!-- 5. POST-MATCH SUMMARY -->
-        <div id="screen-post-match" class="screen hidden">
-            <div class="header-block">
-                <h2 id="post-comp-title">Match Summary</h2>
-                <p id="post-date-title"></p>
-            </div>
-            
-            <div class="split-view">
-                <div class="split-pane">
-                    <p class="label" style="text-align: center;">RESULTS</p>
-                    <div id="post-gw-results" class="fixture-list scrollable"></div>
-                </div>
-                <div class="split-pane" id="post-context-pane">
-                    <!-- Either mini table or cup bracket generated via JS -->
-                </div>
-            </div>
-            <button onclick="advanceTimeline()" class="btn-primary mt-15">Continue</button>
-        </div>
-
-        <!-- 6. STANDINGS -->
-        <div id="screen-standings" class="screen hidden">
-            <div class="header-block">
-                <h2 id="standings-title">League Table</h2>
-            </div>
-            <div class="table-container scrollable">
-                <table id="league-table">
-                    <thead><tr><th>#</th><th>Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr></thead>
-                    <tbody id="table-body"></tbody>
-                </table>
-                <div class="table-key">
-                    <span class="key-box bg-cl"></span> Champions Lg 
-                    <span class="key-box bg-el"></span> Europa
-                    <span class="key-box bg-prom"></span> Promoted 
-                    <span class="key-box bg-po"></span> Play-off 
-                    <span class="key-box bg-rel"></span> Relegated
-                </div>
-            </div>
-            <button onclick="switchScreen('hub')" class="btn-secondary mt-15">Back to Hub</button>
-        </div>
-
-        <!-- 7. CALENDAR -->
-        <div id="screen-calendar" class="screen hidden">
-            <div class="header-block" style="display: flex; justify-content: space-between; align-items: center;">
-                <button onclick="changeCalMonth(-1)" class="btn-icon">◀</button>
-                <h2 id="cal-month-title" style="margin: 0;">August 2024</h2>
-                <button onclick="changeCalMonth(1)" class="btn-icon">▶</button>
-            </div>
-            
-            <div class="calendar-split">
-                <!-- Visual Grid -->
-                <div class="cal-grid-pane">
-                    <div class="cal-days-header"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
-                    <div id="cal-grid-body" class="cal-grid-body"></div>
-                </div>
-                <!-- Fixtures List -->
-                <div class="cal-list-pane scrollable" id="cal-side-list"></div>
-            </div>
-
-            <button onclick="switchScreen('hub')" class="btn-secondary mt-15">Back to Hub</button>
-        </div>
-
-        <!-- 8. SETTINGS -->
-        <div id="screen-settings" class="screen hidden">
-            <div class="header-block">
-                <h2>Settings</h2>
-            </div>
-            <div class="settings-card">
-                <label>Match Speed: <span id="speed-label" class="badge">1x</span></label>
-                <input type="range" id="speed-slider" min="1" max="10" value="1" class="slider">
-            </div>
-            <button onclick="switchScreen('hub')" class="btn-secondary mt-15">Back to Hub</button>
-        </div>
-
-        <!-- END OF SEASON / GAME OVER omitted for brevity, uses same structure as previous -->
-        <div id="screen-end-season" class="screen hidden">
-            <div class="header-block"><h2>Season Complete</h2></div>
-            <div class="settings-card scrollable" id="season-summary-content" style="text-align: center;"></div>
-            <button onclick="startNewSeason()" class="btn-primary mt-15">Start Next Season</button>
-        </div>
-        <div id="screen-game-over" class="screen hidden" style="justify-content: center; align-items: center; text-align: center;">
-            <h1 style="color: var(--card-red); font-size: 3rem; margin-bottom: 20px;">SACKED</h1>
-            <p style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 30px;">You have been relegated from the professional leagues.</p>
-            <button onclick="location.reload()" class="btn-secondary">Start Over</button>
-        </div>
-
+        <div id="league-list" class="league-grid"></div>
     </div>
-    <script src="script.js"></script>
+
+    <!-- ══ SCREEN 1: TEAM SELECTION ══ -->
+    <div id="screen-selection" class="screen hidden">
+        <div class="screen-header">
+            <button onclick="switchScreen('league-select')" class="back-btn">← Back</button>
+            <div class="wordmark" style="font-size:1.8rem">Choose Your Club</div>
+            <p class="subtitle">Season <span id="sel-season-label"></span></p>
+        </div>
+        <div id="team-list" class="team-grid scrollable"></div>
+    </div>
+
+    <!-- ══ SCREEN 2: MAIN HUB ══ -->
+    <div id="screen-hub" class="screen hidden">
+        <div class="hub-topbar">
+            <div class="hub-club-pill">
+                <img id="hub-logo" src="" alt="">
+                <div>
+                    <div class="hub-club-name" id="hub-name">Club</div>
+                    <div class="hub-club-stats" id="hub-stats">ATT 0 · MID 0 · DEF 0</div>
+                </div>
+                <span class="season-tag" id="hub-season">2024/25</span>
+            </div>
+        </div>
+
+        <div class="next-fixture-card" id="next-fixture-card">
+            <div class="nfc-meta">
+                <span class="comp-pill" id="hub-next-comp">LEAGUE</span>
+                <span class="nfc-date" id="hub-next-date">Aug 10</span>
+            </div>
+            <div class="nfc-matchup" id="hub-next-opp">vs Opponent</div>
+            <button id="hub-action-btn" onclick="handleHubAction()" class="btn-kick">Match Prep ›</button>
+        </div>
+
+        <div class="hub-nav">
+            <button onclick="switchScreen('standings')" class="nav-tile">
+                <span class="nav-icon">🏆</span>
+                <span>Table</span>
+            </button>
+            <button onclick="openCalendar()" class="nav-tile">
+                <span class="nav-icon">📅</span>
+                <span>Calendar</span>
+            </button>
+            <button onclick="openResults()" class="nav-tile">
+                <span class="nav-icon">📋</span>
+                <span>Results</span>
+            </button>
+            <button onclick="switchScreen('settings')" class="nav-tile">
+                <span class="nav-icon">⚙️</span>
+                <span>Settings</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ══ CUP DRAW ══ -->
+    <div id="screen-draw" class="screen hidden" style="justify-content:center;align-items:center;">
+        <div class="screen-header" style="text-align:center;">
+            <div class="wordmark" style="font-size:1.6rem" id="draw-comp-title">Cup Draw</div>
+            <p class="subtitle">Drawing your next opponent…</p>
+        </div>
+        <div class="draw-box">
+            <div class="draw-label">YOU HAVE DRAWN</div>
+            <div id="draw-roller" class="draw-roller">???</div>
+        </div>
+        <button id="btn-finish-draw" onclick="finishDraw()" class="btn-kick mt-20 hidden">Continue →</button>
+    </div>
+
+    <!-- ══ SCREEN 3: PRE-MATCH ══ -->
+    <div id="screen-pre-match" class="screen hidden">
+        <div class="screen-header">
+            <div class="comp-pill" id="pre-comp-title">Matchday</div>
+            <div class="pre-date" id="pre-date-title">Date</div>
+            <p id="pre-susp-warning" class="warning-text"></p>
+        </div>
+        <div class="matchup-card">
+            <div class="matchup-side">
+                <img id="pre-h-logo" src="" alt="" class="team-logo-lg">
+                <div class="matchup-name" id="pre-h-name">Home</div>
+                <div class="matchup-stats" id="pre-h-stats">A:0 M:0 D:0</div>
+            </div>
+            <div class="matchup-vs">VS</div>
+            <div class="matchup-side">
+                <img id="pre-a-logo" src="" alt="" class="team-logo-lg">
+                <div class="matchup-name" id="pre-a-name">Away</div>
+                <div class="matchup-stats" id="pre-a-stats">A:0 M:0 D:0</div>
+            </div>
+        </div>
+        <div class="pre-actions">
+            <button id="btn-start-match" class="btn-kick">⚽ Kick Off</button>
+            <button onclick="skipMatch()" class="btn-ghost">Quick Sim ›</button>
+            <button onclick="switchScreen('hub')" class="btn-text">← Back to Hub</button>
+        </div>
+    </div>
+
+    <!-- ══ SCREEN 4: MATCH ══ -->
+    <div id="screen-match" class="screen hidden">
+        <div class="arena">
+            <div class="arena-clock">
+                <span id="m-clock">0</span><span id="m-extra"></span>'
+            </div>
+            <div class="arena-scoreboard">
+                <div class="arena-team">
+                    <img id="m-h-logo" src="" alt="" class="arena-logo">
+                    <span id="m-h-name">Home</span>
+                </div>
+                <div class="arena-score" id="m-score">0 – 0</div>
+                <div class="arena-team arena-team-away">
+                    <img id="m-a-logo" src="" alt="" class="arena-logo">
+                    <span id="m-a-name">Away</span>
+                </div>
+            </div>
+            <div id="m-live-stats" class="live-stats-bar"></div>
+            <div id="m-alert" class="event-flash hidden">GOAL!</div>
+            <div class="commentary-wrap scrollable">
+                <ul id="m-events" class="commentary-list"></ul>
+            </div>
+        </div>
+        <div class="match-footer">
+            <div class="speed-control">
+                <span class="speed-label-sm">Speed</span>
+                <input type="range" id="speed-slider-match" min="1" max="10" value="1" class="speed-slider">
+                <span id="speed-label-match" class="speed-val">1x</span>
+            </div>
+            <button id="btn-finish-match" class="btn-kick hidden" onclick="finishPlayerMatch()">Full Time · Continue →</button>
+        </div>
+    </div>
+
+    <!-- ══ SCREEN 5: POST MATCH ══ -->
+    <div id="screen-post-match" class="screen hidden">
+        <div class="screen-header">
+            <div class="wordmark" style="font-size:1.4rem" id="post-comp-title">Summary</div>
+            <p class="subtitle" id="post-date-title"></p>
+        </div>
+        <div class="post-layout">
+            <div class="post-pane">
+                <div class="pane-label">RESULTS</div>
+                <div id="post-gw-results" class="fixture-list scrollable"></div>
+            </div>
+            <div class="post-pane" id="post-context-pane"></div>
+        </div>
+        <button onclick="advanceTimeline()" class="btn-kick mt-15">Continue →</button>
+    </div>
+
+    <!-- ══ SCREEN 6: STANDINGS ══ -->
+    <div id="screen-standings" class="screen hidden">
+        <div class="screen-header">
+            <div class="wordmark" style="font-size:1.4rem" id="standings-title">League Table</div>
+        </div>
+        <div class="table-wrap scrollable">
+            <table class="league-table">
+                <thead>
+                    <tr><th>#</th><th class="left">Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+            </table>
+            <div class="table-legend">
+                <span><span class="legend-dot cl"></span>Champions League</span>
+                <span><span class="legend-dot el"></span>Europa</span>
+                <span><span class="legend-dot prom"></span>Promoted</span>
+                <span><span class="legend-dot po"></span>Play-offs</span>
+                <span><span class="legend-dot rel"></span>Relegated</span>
+            </div>
+        </div>
+        <button onclick="switchScreen('hub')" class="btn-ghost mt-15">← Back</button>
+    </div>
+
+    <!-- ══ SCREEN 7: CALENDAR ══ -->
+    <div id="screen-calendar" class="screen hidden">
+        <div class="screen-header cal-header-bar">
+            <button onclick="changeCalMonth(-1)" class="btn-icon-sm">‹</button>
+            <div id="cal-month-title" class="wordmark" style="font-size:1.4rem">August 2024</div>
+            <button onclick="changeCalMonth(1)" class="btn-icon-sm">›</button>
+        </div>
+        <div class="cal-layout">
+            <div class="cal-main">
+                <div class="cal-weekdays">
+                    <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                </div>
+                <div id="cal-grid" class="cal-grid"></div>
+            </div>
+            <div class="cal-sidebar">
+                <div class="pane-label">FIXTURES THIS MONTH</div>
+                <div id="cal-sidebar-list" class="fixture-list scrollable"></div>
+            </div>
+        </div>
+        <button onclick="switchScreen('hub')" class="btn-ghost mt-15">← Back</button>
+    </div>
+
+    <!-- ══ SCREEN 8: RESULTS ══ -->
+    <div id="screen-results" class="screen hidden">
+        <div class="screen-header">
+            <div class="wordmark" style="font-size:1.4rem">Results & Fixtures</div>
+        </div>
+        <div class="results-comp-tabs" id="results-tabs"></div>
+        <div id="results-list" class="fixture-list scrollable" style="flex:1;margin-top:10px;"></div>
+        <button onclick="switchScreen('hub')" class="btn-ghost mt-15">← Back</button>
+    </div>
+
+    <!-- ══ SCREEN 9: SETTINGS ══ -->
+    <div id="screen-settings" class="screen hidden">
+        <div class="screen-header">
+            <div class="wordmark" style="font-size:1.4rem">Settings</div>
+        </div>
+        <div class="settings-card">
+            <div class="setting-row">
+                <div>
+                    <div class="setting-title">Match Speed</div>
+                    <div class="setting-sub">How fast the match simulation runs</div>
+                </div>
+                <div class="speed-control-row">
+                    <input type="range" id="speed-slider" min="1" max="10" value="1" class="speed-slider">
+                    <span id="speed-label" class="speed-val">1x</span>
+                </div>
+            </div>
+            <div class="setting-row">
+                <div>
+                    <div class="setting-title">Appearance</div>
+                    <div class="setting-sub">Toggle light / dark theme</div>
+                </div>
+                <button id="theme-toggle-btn" onclick="toggleTheme()" class="theme-toggle">
+                    <span id="theme-icon">🌙</span>
+                    <span id="theme-label">Dark Mode</span>
+                </button>
+            </div>
+        </div>
+        <button onclick="switchScreen('hub')" class="btn-ghost mt-15">← Back</button>
+    </div>
+
+    <!-- ══ SCREEN 10: END SEASON ══ -->
+    <div id="screen-end-season" class="screen hidden">
+        <div class="screen-header">
+            <div class="wordmark" style="font-size:1.6rem">⚽ Season Complete</div>
+        </div>
+        <div id="season-summary-content" class="season-summary scrollable"></div>
+        <button onclick="startNewSeason()" class="btn-kick mt-15">Start Next Season →</button>
+    </div>
+
+    <!-- ══ SCREEN 11: GAME OVER ══ -->
+    <div id="screen-game-over" class="screen hidden" style="justify-content:center;align-items:center;text-align:center;">
+        <div class="sacked-header">SACKED</div>
+        <p class="subtitle" style="font-size:1.1rem;margin-bottom:30px;">Relegated from the Football League. Your career is over.</p>
+        <button onclick="location.reload()" class="btn-ghost">Start Over</button>
+    </div>
+
+</div>
+<script src="script.js"></script>
 </body>
 </html>
